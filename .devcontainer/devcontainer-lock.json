@@ -1,0 +1,19 @@
+{
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "1.7.1",
+      "resolved": "ghcr.io/devcontainers/features/node@sha256:8c0de46939b61958041700ee89e3493f3b2e4131a06dc46b4d9423427d06e5f6",
+      "integrity": "sha256:8c0de46939b61958041700ee89e3493f3b2e4131a06dc46b4d9423427d06e5f6"
+    },
+    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {
+      "version": "2.0.5",
+      "resolved": "ghcr.io/meaningful-ooo/devcontainer-features/homebrew@sha256:c49ba0f6275bdd0474f4c7fcf37fc84b5739838b110c7da9c16d6a409ae48a86",
+      "integrity": "sha256:c49ba0f6275bdd0474f4c7fcf37fc84b5739838b110c7da9c16d6a409ae48a86"
+    },
+    "ghcr.io/nikobockerman/devcontainer-features/fish-persistent-data:2": {
+      "version": "2.0.3",
+      "resolved": "ghcr.io/nikobockerman/devcontainer-features/fish-persistent-data@sha256:dd058881255848fa7d00c60a8b591e912346f6b839189574e2dae80c623af89b",
+      "integrity": "sha256:dd058881255848fa7d00c60a8b591e912346f6b839189574e2dae80c623af89b"
+    }
+  }
+}
