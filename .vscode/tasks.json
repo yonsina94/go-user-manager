@@ -9,7 +9,17 @@
         "cwd": "${workspaceFolder}/frontend/user-manager-frontend"
       },
       "isBackground": true,
-      "problemMatcher": []
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*$",
+          "endsPattern": "Local:\\s+http"
+        }
+      }
     }
   ]
 }

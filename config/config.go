@@ -7,18 +7,21 @@ import (
 )
 
 type Config struct {
-	Port          string `mapstructure:"PORT"`
-	DBHost        string `mapstructure:"DB_HOST"`
-	DBPort        string `mapstructure:"DB_PORT"`
-	DBUser        string `mapstructure:"DB_USER"`
-	DBPassword    string `mapstructure:"DB_PASSWORD"`
-	DBName        string `mapstructure:"DB_NAME"`
-	SkipDBConnect bool   `mapstructure:"SKIP_DB_CONNECT"`
+	Port                 string `mapstructure:"PORT"`
+	DBHost               string `mapstructure:"DB_HOST"`
+	DBPort               string `mapstructure:"DB_PORT"`
+	DBUser               string `mapstructure:"DB_USER"`
+	DBPassword           string `mapstructure:"DB_PASSWORD"`
+	DBName               string `mapstructure:"DB_NAME"`
+	SkipDBConnect        bool   `mapstructure:"SKIP_DB_CONNECT"`
+	DefaultAdminUser     string `mapstructure:"DEFAULT_ADMIN_USER"`
+	DefaultAdminPass     string `mapstructure:"DEFAULT_ADMIN_PASS"`
+	DefaultAdminEmail    string `mapstructure:"DEFAULT_ADMIN_EMAIL"`
 }
 
 var AppConfig Config
 
-func LoadConfig() {
+func init() {
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
@@ -29,8 +32,11 @@ func LoadConfig() {
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("DB_USER", "postgres")
 	viper.SetDefault("DB_PASSWORD", "postgres")
-	viper.SetDefault("DB_NAME", "go_user_manager")
+	viper.SetDefault("DB_NAME", "postgres")
 	viper.SetDefault("SKIP_DB_CONNECT", false)
+	viper.SetDefault("DEFAULT_ADMIN_USER", "admin")
+	viper.SetDefault("DEFAULT_ADMIN_PASS", "admin123")
+	viper.SetDefault("DEFAULT_ADMIN_EMAIL", "admin@example.com")
 
 	// Attempt to read config file
 	if err := viper.ReadInConfig(); err != nil {

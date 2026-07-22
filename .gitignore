@@ -34,3 +34,9 @@ go.work.sum
 # Frontend build output embedded in Go
 web/
 
+# Temporary and log directories
+tmp/
+logs/
+repomix-output.md
+
+
