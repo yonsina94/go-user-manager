@@ -43,7 +43,7 @@ func ConnectDatabase(logFactory *logging.LoggerFactory) {
 	}
 
 	// Auto Migrate the schemas
-	err = database.AutoMigrate(&entities.User{})
+	err = database.AutoMigrate(&entities.User{}, &entities.PasswordResetToken{})
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}

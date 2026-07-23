@@ -11,6 +11,7 @@ import { CreateUserModal } from "./components/modal/createUser.modal";
 import { EditUserModal } from "./components/modal/editUser.modal";
 import { QueryOperator, type QueryFilter } from "./types/query";
 import { UserRole } from "./types/user";
+import { RecoveryPasswordPage } from "./pages/recoverPassword/recoverPassword.page";
 
 const StatusBadge = styled.span.attrs<{ $active: boolean }>((props) => ({                     
   className: `inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border      
@@ -380,6 +381,8 @@ const SettingsPage = () => {
           <Routes>
             {/* Ruta Pública de Login */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/recover-password" element={<RecoveryPasswordPage />} />
+  
   
             {/* Rutas Protegidas que requieren estar logueado */}
             <Route element={<ProtectedRoute />}>

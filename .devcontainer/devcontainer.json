@@ -20,7 +20,7 @@
   // "customizations": {},
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [5173, 8080, 5432],
+  "forwardPorts": [5173, 8080, 5432, 8025, 1025],
 
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "brew install --cask antigravity-cli || brew install antigravity-cli || curl -fsSL https://antigravity.google/cli/install.sh | bash",

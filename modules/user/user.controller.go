@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -11,20 +12,23 @@ import (
 	"github.com/yonsina94/go-user-manager/modules/commons/transformer"
 	"github.com/yonsina94/go-user-manager/modules/enums"
 	"github.com/yonsina94/go-user-manager/modules/user/entities"
+	"github.com/yonsina94/go-user-manager/pkg/email"
 	"github.com/yonsina94/go-user-manager/pkg/query"
 )
 
 type UserController struct {
-	gr      *gin.RouterGroup
-	service *UserService
-	mapper  transformer.Transformer[entities.User, UserDTO]
+	gr           *gin.RouterGroup
+	service      *UserService
+	emailService *email.EmailService
+	mapper       transformer.Transformer[entities.User, UserDTO]
 }
 
 func NewUserController(router *gin.RouterGroup, service *UserService) *UserController {
 	uc := &UserController{
-		gr:      router,
-		service: service,
-		mapper:  NewUserMapper(),
+		gr:           router,
+		service:      service,
+		emailService: email.NewEmailService("localhost", 1025, "no-reply@gousermanager.local"),
+		mapper:       NewUserMapper(),
 	}
 
 	// Rutas Públicas
@@ -214,15 +218,25 @@ func (u *UserController) forgotPassword(c *gin.Context) {
 		return
 	}
 
-	_, err := u.service.repo.Where("email = ?", req.Email).First(c.Request.Context())
+	user, err := u.service.FindByEmail(c.Request.Context(), req.Email)
 	if err != nil {
 		u.sendError(c, http.StatusNotFound, err, "No existe una cuenta registrada con este correo electrónico")
 		return
 	}
 
-	dummyRecoveryToken := "rec-token-12345"
+	resetRecord, err := u.service.CreatePasswordResetToken(c.Request.Context(), req.Email, c.ClientIP(), c.Request.UserAgent())
+	if err != nil {
+		u.sendError(c, http.StatusInternalServerError, err, "Error al generar token de recuperación")
+		return
+	}
+
+	resetURL := fmt.Sprintf("http://localhost:5173/recover-password?token=%s", resetRecord.Token)
+	if err := u.emailService.SendPasswordResetEmail(c.Request.Context(), user.Email, user.Name, resetURL); err != nil {
+		u.service.logger.ErrorContext(c.Request.Context(), "Error enviando correo SMTP a Mailpit", slog.Any("error", err))
+	}
+
 	u.sendSuccess(c, http.StatusOK, gin.H{
-		"token": dummyRecoveryToken,
+		"token": resetRecord.Token,
 	}, "Correo de recuperación enviado exitosamente")
 }
 
@@ -233,20 +247,9 @@ func (u *UserController) resetPassword(c *gin.Context) {
 		return
 	}
 
-	if req.Token != "rec-token-12345" {
-		u.sendError(c, http.StatusBadRequest, nil, "Token de recuperación inválido o expirado")
-		return
-	}
-
-	users, err := u.service.FindAll(c.Request.Context())
-	if err != nil || len(users) == 0 {
-		u.sendError(c, http.StatusInternalServerError, err, "No hay usuarios registrados")
-		return
-	}
-
-	_, err = u.service.UpdatePassword(c.Request.Context(), users[0].ID, req.NewPassword)
-	if err != nil {
-		u.sendError(c, http.StatusInternalServerError, err, "Error al restablecer contraseña")
+	success, err := u.service.ResetPasswordWithToken(c.Request.Context(), req.Token, req.NewPassword)
+	if err != nil || !success {
+		u.sendError(c, http.StatusBadRequest, err, "Token de recuperación inválido o expirado")
 		return
 	}
 

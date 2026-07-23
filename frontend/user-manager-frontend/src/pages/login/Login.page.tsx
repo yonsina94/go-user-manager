@@ -84,6 +84,8 @@ return (
             >{loading ? "Iniciando Sesión..." : "Iniciar Sesión"}</button>
 
         </form>
+
+        <a onClick={(e)=>{e.preventDefault(); navigate("/recover-password")}} className="text-sm text-purple-600 hover:underline">Olvidaste tu Contraseña ?</a>
     
         </div>
     </div>

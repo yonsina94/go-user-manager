@@ -4,6 +4,7 @@ import type { User, UserDTO, UserRole } from "../types/user";
 import { mapUserDtoToUser, mapUserDtosToUsers } from "../mappers/user.mapper";
 import type { RegisterRequest } from "../types/register";
 import type { QueryFilter, SearchResponse } from "../types/query";
+import type { ForgotPasswordRequest, ResetPasswordRequest } from "../types/recoverPassword";
 
 const API_BASE_URL = "/api";
 
@@ -73,6 +74,21 @@ export const apiService = {
 
         return response as unknown as ApiResponse<User>;
     },
+
+    forgotPassword: async (payload: ForgotPasswordRequest): Promise<ApiResponse<void>> => {
+        return request<void>("/user/forgot-password", {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+    },
+
+    resetPassword: async (payload: ResetPasswordRequest): Promise<ApiResponse<void>> => {
+        return request<void>("/user/reset-password", {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+    },
+
 
     getProfile: async (): Promise<ApiResponse<User>> => {
         const response = await request<UserDTO>("/user/profile", {

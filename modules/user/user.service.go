@@ -2,7 +2,11 @@ package user
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/yonsina94/go-user-manager/logging"
 	"github.com/yonsina94/go-user-manager/modules/enums"
@@ -88,6 +92,16 @@ func (u *UserService) FindByUsername(ctx context.Context, username string) (enti
 	user, err := u.repo.Where("username = ?", username).First(ctx)
 	if err != nil {
 		u.logger.ErrorContext(ctx, "Error retrieving user by username", slog.String("username", username), slog.Any("error", err))
+		return entities.User{}, err
+	}
+	return user, nil
+}
+
+func (u *UserService) FindByEmail(ctx context.Context, email string) (entities.User, error) {
+	u.logger.DebugContext(ctx, "Retrieving user by email", slog.String("email", email))
+	user, err := u.repo.Where("email = ?", email).First(ctx)
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Error retrieving user by email", slog.String("email", email), slog.Any("error", err))
 		return entities.User{}, err
 	}
 	return user, nil
@@ -290,4 +304,75 @@ func (u *UserService) FindWithFilter(ctx context.Context, filter *query.QueryFil
 
 	u.logger.DebugContext(ctx, "FindWithFilter completed successfully", slog.Int64("total", total), slog.Int("count", len(users)))
 	return users, total, nil
+}
+
+func generateSecureToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+func (u *UserService) CreatePasswordResetToken(ctx context.Context, email, ipAddress, userAgent string) (*entities.PasswordResetToken, error) {
+	u.logger.DebugContext(ctx, "Creating password reset token for email", slog.String("email", email))
+
+	user, err := u.FindByEmail(ctx, email)
+	if err != nil {
+		u.logger.WarnContext(ctx, "User not found for password reset request", slog.String("email", email))
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	tokenStr, err := generateSecureToken()
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Error generating secure reset token", slog.Any("error", err))
+		return nil, err
+	}
+
+	resetRecord := entities.PasswordResetToken{
+		UserID:    user.ID,
+		Token:     tokenStr,
+		ExpiresAt: time.Now().Add(15 * time.Minute),
+		Used:      false,
+		IPAddress: ipAddress,
+		UserAgent: userAgent,
+	}
+
+	if err := u.db.WithContext(ctx).Create(&resetRecord).Error; err != nil {
+		u.logger.ErrorContext(ctx, "Error storing password reset token in database", slog.Any("error", err))
+		return nil, err
+	}
+
+	u.logger.InfoContext(ctx, "Password reset token created successfully", slog.Uint64("userId", uint64(user.ID)), slog.String("token", tokenStr))
+	return &resetRecord, nil
+}
+
+func (u *UserService) ResetPasswordWithToken(ctx context.Context, tokenStr, newPassword string) (bool, error) {
+	u.logger.DebugContext(ctx, "Attempting password reset with token")
+
+	var resetRecord entities.PasswordResetToken
+	err := u.db.WithContext(ctx).
+		Where("token = ? AND used = ? AND expires_at > ?", tokenStr, false, time.Now()).
+		First(&resetRecord).Error
+
+	if err != nil {
+		u.logger.WarnContext(ctx, "Invalid or expired password reset token supplied")
+		return false, fmt.Errorf("token de recuperación inválido o expirado")
+	}
+
+	// Actualizar la contraseña del usuario
+	if _, err := u.UpdatePassword(ctx, resetRecord.UserID, newPassword); err != nil {
+		u.logger.ErrorContext(ctx, "Error updating password for reset token", slog.Any("error", err))
+		return false, err
+	}
+
+	// Marcar token como utilizado (auditoría)
+	now := time.Now()
+	u.db.WithContext(ctx).Model(&resetRecord).Updates(map[string]any{
+		"used":    true,
+		"used_at": &now,
+	})
+
+	u.logger.InfoContext(ctx, "Password reset successfully executed with token", slog.Uint64("userId", uint64(resetRecord.UserID)))
+	return true, nil
 }
