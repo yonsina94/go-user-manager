@@ -31,7 +31,7 @@ const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
             if(password !== confirmPassword)
                 throw new Error("Passwords not match");
             
-            await apiService.resetPassword({token: activeToken, password})
+            await apiService.resetPassword({ token: activeToken, newPassword: password })
             setMessage("¡Contraseña restablecida con éxito! Redirigiendo al login...");                                       
             setTimeout(() => navigate("/login"), 3000);   
         } else {

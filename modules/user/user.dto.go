@@ -84,7 +84,7 @@ type ForgotPasswordRequest struct {
 // ResetPasswordRequest representa los datos para restablecer la contraseña usando un token.
 type ResetPasswordRequest struct {
 	Token       string `json:"token" binding:"required"`
-	NewPassword string `json:"newPassword" binding:"required,min=6"`
+	NewPassword string `json:"newPassword"`
 }
 
 // ChangePasswordRequest representa una petición directa de cambio de contraseña.

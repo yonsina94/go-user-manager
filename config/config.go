@@ -17,6 +17,9 @@ type Config struct {
 	DefaultAdminUser     string `mapstructure:"DEFAULT_ADMIN_USER"`
 	DefaultAdminPass     string `mapstructure:"DEFAULT_ADMIN_PASS"`
 	DefaultAdminEmail    string `mapstructure:"DEFAULT_ADMIN_EMAIL"`
+	SMTPHost             string `mapstructure:"SMTP_HOST"`
+	SMTPPort             int    `mapstructure:"SMTP_PORT"`
+	SMTPFrom             string `mapstructure:"SMTP_FROM"`
 }
 
 var AppConfig Config
@@ -37,6 +40,9 @@ func init() {
 	viper.SetDefault("DEFAULT_ADMIN_USER", "admin")
 	viper.SetDefault("DEFAULT_ADMIN_PASS", "admin123")
 	viper.SetDefault("DEFAULT_ADMIN_EMAIL", "admin@example.com")
+	viper.SetDefault("SMTP_HOST", "mailpit")
+	viper.SetDefault("SMTP_PORT", 1025)
+	viper.SetDefault("SMTP_FROM", "no-reply@gousermanager.local")
 
 	// Attempt to read config file
 	if err := viper.ReadInConfig(); err != nil {

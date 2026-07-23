@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yonsina94/go-user-manager/config"
 	"github.com/yonsina94/go-user-manager/dto"
 	"github.com/yonsina94/go-user-manager/middleware"
 	"github.com/yonsina94/go-user-manager/modules/commons/transformer"
@@ -27,7 +28,7 @@ func NewUserController(router *gin.RouterGroup, service *UserService) *UserContr
 	uc := &UserController{
 		gr:           router,
 		service:      service,
-		emailService: email.NewEmailService("localhost", 1025, "no-reply@gousermanager.local"),
+		emailService: email.NewEmailService(config.AppConfig.SMTPHost, config.AppConfig.SMTPPort, config.AppConfig.SMTPFrom),
 		mapper:       NewUserMapper(),
 	}
 
@@ -230,9 +231,10 @@ func (u *UserController) forgotPassword(c *gin.Context) {
 		return
 	}
 
-	resetURL := fmt.Sprintf("http://localhost:5173/recover-password?token=%s", resetRecord.Token)
+	resetURL := fmt.Sprintf("http://localhost:8080/recover-password?token=%s", resetRecord.Token)
 	if err := u.emailService.SendPasswordResetEmail(c.Request.Context(), user.Email, user.Name, resetURL); err != nil {
-		u.service.logger.ErrorContext(c.Request.Context(), "Error enviando correo SMTP a Mailpit", slog.Any("error", err))
+		u.sendError(c, http.StatusInternalServerError, err, "Error al enviar el correo de recuperación")
+		return
 	}
 
 	u.sendSuccess(c, http.StatusOK, gin.H{
@@ -247,7 +249,14 @@ func (u *UserController) resetPassword(c *gin.Context) {
 		return
 	}
 
-	success, err := u.service.ResetPasswordWithToken(c.Request.Context(), req.Token, req.NewPassword)
+	newPassword := req.NewPassword
+
+	if len(newPassword) < 6 {
+		u.sendError(c, http.StatusBadRequest, fmt.Errorf("la contraseña debe tener al menos 6 caracteres"), "Datos de restablecimiento inválidos")
+		return
+	}
+
+	success, err := u.service.ResetPasswordWithToken(c.Request.Context(), req.Token, newPassword)
 	if err != nil || !success {
 		u.sendError(c, http.StatusBadRequest, err, "Token de recuperación inválido o expirado")
 		return

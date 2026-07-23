@@ -19,7 +19,7 @@ type EmailService struct {
 
 func NewEmailService(host string, port int, from string) *EmailService {
 	if host == "" {
-		host = "localhost"
+		host = "mailpit"
 	}
 	if port == 0 {
 		port = 1025
