@@ -20,6 +20,7 @@ type Config struct {
 	SMTPHost             string `mapstructure:"SMTP_HOST"`
 	SMTPPort             int    `mapstructure:"SMTP_PORT"`
 	SMTPFrom             string `mapstructure:"SMTP_FROM"`
+	FrontendURL          string `mapstructure:"FRONTEND_URL"`
 }
 
 var AppConfig Config
@@ -43,6 +44,7 @@ func init() {
 	viper.SetDefault("SMTP_HOST", "mailpit")
 	viper.SetDefault("SMTP_PORT", 1025)
 	viper.SetDefault("SMTP_FROM", "no-reply@gousermanager.local")
+	viper.SetDefault("FRONTEND_URL", "http://localhost:5173")
 
 	// Attempt to read config file
 	if err := viper.ReadInConfig(); err != nil {

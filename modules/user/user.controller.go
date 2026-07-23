@@ -231,7 +231,7 @@ func (u *UserController) forgotPassword(c *gin.Context) {
 		return
 	}
 
-	resetURL := fmt.Sprintf("http://localhost:8080/recover-password?token=%s", resetRecord.Token)
+	resetURL := fmt.Sprintf("%s/recover-password?token=%s", config.AppConfig.FrontendURL, resetRecord.Token)
 	if err := u.emailService.SendPasswordResetEmail(c.Request.Context(), user.Email, user.Name, resetURL); err != nil {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al enviar el correo de recuperación")
 		return
