@@ -1,16 +1,17 @@
-.PHONY: install build-frontend build-backend build run run-offline run-frontend dev dev-offline ensure-air clean
+.PHONY: install build-frontend build-backend build run run-offline run-frontend dev dev-offline ensure-air ensure-templ clean
 
 # Directorio de binarios
 BIN_DIR = bin
 SERVER_BIN = $(BIN_DIR)/server
 GOPATH := $(shell go env GOPATH)
 AIR := $(GOPATH)/bin/air
+TEMPL := $(GOPATH)/bin/templ
 
 # Comando por defecto
 all: build
 
 # Instalar todas las dependencias (Backend y Frontend)
-install:
+install: ensure-air ensure-templ
 	@echo "Installing backend dependencies..."
 	go mod download
 	@echo "Installing frontend dependencies..."
@@ -20,15 +21,19 @@ install:
 ensure-air:
 	@which air > /dev/null 2>&1 || test -f $(AIR) || (echo "Installing air for Go live-reload..." && go install github.com/air-verse/air@latest)
 
+# Verificar e instalar Templ si no existe
+ensure-templ:
+	@which templ > /dev/null 2>&1 || test -f $(TEMPL) || (echo "Installing templ CLI..." && go install github.com/a-h/templ/cmd/templ@latest)
+
 # Modo Desarrollo completo con Hot Reload (Frontend Vite HMR + Backend Go Air Live-Reload)
-dev: ensure-air
+dev: ensure-air ensure-templ
 	@echo "Starting full-stack development environment with Hot Reload..."
 	@npx --yes concurrently -k -n "FRONTEND,BACKEND" -c "cyan.bold,yellow.bold" \
 		"cd frontend/user-manager-frontend && pnpm dev" \
 		"$(AIR)"
 
 # Modo Desarrollo completo con Hot Reload en modo OFFLINE (sin conexión a base de datos)
-dev-offline: ensure-air
+dev-offline: ensure-air ensure-templ
 	@echo "Starting full-stack development environment in OFFLINE mode with Hot Reload..."
 	@npx --yes concurrently -k -n "FRONTEND,BACKEND" -c "cyan.bold,yellow.bold" \
 		"cd frontend/user-manager-frontend && pnpm dev" \
@@ -40,7 +45,9 @@ build-frontend:
 	cd frontend/user-manager-frontend && pnpm build
 
 # Construir el ejecutable de Go (requiere el frontend construido para el embed)
-build-backend: build-frontend
+build-backend: build-frontend ensure-templ
+	@echo "Generating Templ templates..."
+	@$(TEMPL) generate ./...
 	@echo "Building Go server..."
 	mkdir -p $(BIN_DIR)
 	go build -o $(SERVER_BIN) main.go
@@ -50,12 +57,16 @@ build-backend: build-frontend
 build: build-backend
 
 # Ejecutar el servidor Go con conexión a base de datos (requiere PostgreSQL corriendo)
-run: build-frontend
+run: build-frontend ensure-templ
+	@echo "Generating Templ templates..."
+	@$(TEMPL) generate ./...
 	@echo "Starting Go server..."
 	go run main.go
 
 # Ejecutar el servidor Go saltándose la conexión de base de datos (útil para pruebas de UI y offline)
-run-offline: build-frontend
+run-offline: build-frontend ensure-templ
+	@echo "Generating Templ templates..."
+	@$(TEMPL) generate ./...
 	@echo "Starting Go server in OFFLINE mode (skipping DB connection)..."
 	SKIP_DB_CONNECT=true go run main.go
 

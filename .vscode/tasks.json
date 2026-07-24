@@ -20,6 +20,12 @@
           "endsPattern": "Local:\\s+http"
         }
       }
+    },
+    {
+      "label": "Stop Frontend Dev Server",
+      "type": "shell",
+      "command": "fuser -k -9 5173/tcp 2>/dev/null || pkill -9 -f 'vite' 2>/dev/null || true",
+      "problemMatcher": []
     }
   ]
 }

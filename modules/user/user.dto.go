@@ -12,6 +12,7 @@ type UserDTO struct {
 	LastName  string         `json:"lastName"`
 	Username  string         `json:"username"`
 	Email     string         `json:"email"`
+	AvatarUrl string         `json:"avatarUrl,omitempty"`
 	Role      enums.UserRole `json:"role"`
 	Active    bool           `json:"active"`
 	CreatedAt string         `json:"createdAt"`
@@ -48,6 +49,7 @@ func ToUserDTO(u entities.User) UserDTO {
 		LastName:  u.LastName,
 		Username:  u.Username,
 		Email:     u.Email,
+		AvatarUrl: u.AvatarUrl.String,
 		Role:      u.Role,
 		Active:    u.Active,
 		CreatedAt: u.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),

@@ -8,7 +8,7 @@
   "features": {
     "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {},
     "ghcr.io/nikobockerman/devcontainer-features/fish-persistent-data:2": {},
-    "ghcr.io/devcontainers/features/node:1": {
+    "ghcr.io/devcontainers/features/node:2.1.0": {
       "version": "lts"
     }
   },
@@ -20,10 +20,10 @@
   // "customizations": {},
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [5173, 8080, 5432, 8025, 1025],
+  "forwardPorts": [5173, 8080, 5432, 8025, 1025, 9000, 9001],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "go install github.com/a-h/templ/cmd/templ@latest && (cp /go/bin/templ /usr/local/bin/templ 2>/dev/null || true); brew install --cask antigravity-cli || brew install antigravity-cli || curl -fsSL https://antigravity.google/cli/install.sh | bash",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -31,7 +31,9 @@
         "styled-components.vscode-styled-components",
         "streetsidesoftware.code-spell-checker",
         "streetsidesoftware.code-spell-checker-spanish",
-        "a-h.templ"
+        "a-h.templ",
+        "tamasfe.even-better-toml",
+        "cweijan.vscode-database-client2"
       ]
     }
   },

@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"log/slog"
@@ -178,6 +179,25 @@ func (u *UserService) UpdateProfile(ctx context.Context, id uint, name, lastName
 	}
 
 	u.logger.InfoContext(ctx, "Profile updated successfully", slog.Uint64("id", uint64(id)))
+	return r > 0, nil
+}
+
+func (u *UserService) UpdateAvatar(ctx context.Context, id uint, avatarUrl string) (bool, error) {
+	u.logger.DebugContext(ctx, "Updating avatar for user", slog.Uint64("id", uint64(id)))
+
+	r, err := u.repo.Where("id = ?", id).Updates(ctx, entities.User{AvatarUrl: sql.NullString{String: avatarUrl, Valid: true}})
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Error updating avatar in database")
+		return false, err
+	}
+
+	if r == 0 {
+		u.logger.WarnContext(ctx, "User to update avatar not found", slog.Uint64("id", uint64(id)))
+		return false, nil
+	}
+
+	u.logger.InfoContext(ctx, "Avatar updated successfully", slog.Uint64("id", uint64(id)))
+
 	return r > 0, nil
 }
 

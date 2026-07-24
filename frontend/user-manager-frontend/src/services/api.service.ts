@@ -20,15 +20,23 @@ const request = async <T = unknown>(endpoint: string, options: RequestInit = {})
     const token = localStorage.getItem("token");
 
     const headers: Record<string, string> = {
-        "Content-Type": "application/json",
+        ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
         ...(options.headers as Record<string, string>)
     };
+
+    if (options.body instanceof FormData) {
+        delete headers["Content-Type"];
+    }
 
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+
+    if (response.status === 401) {
+        window.dispatchEvent(new Event("unauthorized"));
+    }
 
     const data: ApiResponse<T> = await response.json();
 
@@ -124,6 +132,16 @@ export const apiService = {
         return request<void>(`/user/${userId}`, {
             method: "PUT",
             body: JSON.stringify(payload)
+        });
+    },
+
+    uploadUserAvatar: async (userId: number, file: File): Promise<ApiResponse<{ avatarUrl: string }>> => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        return request<{ avatarUrl: string }>(`/user/${userId}/avatar`, {
+            method: 'PUT',
+            body: formData,
         });
     },
 

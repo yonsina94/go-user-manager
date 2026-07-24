@@ -1,13 +1,12 @@
 FROM mcr.microsoft.com/devcontainers/go:2-1.26-trixie
 
-# [Optional] Uncomment this section to install additional OS packages.
+# Install additional OS packages
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends xclip
+    && apt-get -y install --no-install-recommends xclip curl git
 
-# [Optional] Uncomment the next lines to use go get to install anything else you need
-# USER vscode
-# RUN go get -x <your-dependency-or-tool>
-# USER root
+# Install templ CLI
+RUN su vscode -c "go install github.com/a-h/templ/cmd/templ@latest" \
+    && (cp /go/bin/templ /usr/local/bin/templ 2>/dev/null || true)
 
-# [Optional] Uncomment this line to install global node packages.
-# RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g pnpm" 2>&1
+# Install Antigravity CLI (agy)
+RUN su vscode -c "curl -fsSL https://antigravity.google/cli/install.sh | bash"

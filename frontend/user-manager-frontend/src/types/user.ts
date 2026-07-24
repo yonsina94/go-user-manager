@@ -12,6 +12,7 @@ export interface UserDTO {
     lastName: string;
     username: string;
     email: string;
+    avatarUrl?: string;
     role: UserRole;
     active: boolean;
     createdAt?: string;
@@ -24,6 +25,7 @@ export interface User {
     lastname: string;
     username: string;
     email: string;
+    avatarUrl?: string;
     role: UserRole;
     active: boolean;
     createAt: Date;

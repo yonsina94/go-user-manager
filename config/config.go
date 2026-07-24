@@ -21,6 +21,13 @@ type Config struct {
 	SMTPPort             int    `mapstructure:"SMTP_PORT"`
 	SMTPFrom             string `mapstructure:"SMTP_FROM"`
 	FrontendURL          string `mapstructure:"FRONTEND_URL"`
+	S3Endpoint           string `mapstructure:"S3_ENDPOINT"`
+	S3Region             string `mapstructure:"S3_REGION"`
+	S3Bucket             string `mapstructure:"S3_BUCKET"`
+	S3AccessKey          string `mapstructure:"S3_ACCESS_KEY"`
+	S3SecretKey          string `mapstructure:"S3_SECRET_KEY"`
+	S3UseSSL             bool   `mapstructure:"S3_USE_SSL"`
+	S3PublicURL          string `mapstructure:"S3_PUBLIC_URL"`
 }
 
 var AppConfig Config
@@ -41,10 +48,17 @@ func init() {
 	viper.SetDefault("DEFAULT_ADMIN_USER", "admin")
 	viper.SetDefault("DEFAULT_ADMIN_PASS", "admin123")
 	viper.SetDefault("DEFAULT_ADMIN_EMAIL", "admin@example.com")
-	viper.SetDefault("SMTP_HOST", "mailpit")
+	viper.SetDefault("SMTP_HOST", "localhost")
 	viper.SetDefault("SMTP_PORT", 1025)
 	viper.SetDefault("SMTP_FROM", "no-reply@gousermanager.local")
 	viper.SetDefault("FRONTEND_URL", "http://localhost:5173")
+	viper.SetDefault("S3_ENDPOINT", "localhost:9000")
+	viper.SetDefault("S3_REGION", "us-east-1")
+	viper.SetDefault("S3_BUCKET", "user-avatars")
+	viper.SetDefault("S3_ACCESS_KEY", "minioadmin")
+	viper.SetDefault("S3_SECRET_KEY", "minioadminpassword")
+	viper.SetDefault("S3_USE_SSL", false)
+	viper.SetDefault("S3_PUBLIC_URL", "http://localhost:9000")
 
 	// Attempt to read config file
 	if err := viper.ReadInConfig(); err != nil {

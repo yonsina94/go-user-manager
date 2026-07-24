@@ -9,27 +9,38 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yonsina94/go-user-manager/config"
 	"github.com/yonsina94/go-user-manager/dto"
+	"github.com/yonsina94/go-user-manager/logging"
 	"github.com/yonsina94/go-user-manager/middleware"
 	"github.com/yonsina94/go-user-manager/modules/commons/transformer"
 	"github.com/yonsina94/go-user-manager/modules/enums"
 	"github.com/yonsina94/go-user-manager/modules/user/entities"
 	"github.com/yonsina94/go-user-manager/pkg/email"
 	"github.com/yonsina94/go-user-manager/pkg/query"
+	"github.com/yonsina94/go-user-manager/pkg/storage"
 )
 
 type UserController struct {
-	gr           *gin.RouterGroup
-	service      *UserService
-	emailService *email.EmailService
-	mapper       transformer.Transformer[entities.User, UserDTO]
+	gr             *gin.RouterGroup
+	service        *UserService
+	emailService   *email.EmailService
+	storageService *storage.StorageService
+	mapper         transformer.Transformer[entities.User, UserDTO]
 }
 
-func NewUserController(router *gin.RouterGroup, service *UserService) *UserController {
+func NewUserController(router *gin.RouterGroup, service *UserService, lf *logging.LoggerFactory) *UserController {
+
+	storageService, err := storage.NewStorageService(lf)
+
+	if err != nil {
+		panic(err)
+	}
+
 	uc := &UserController{
-		gr:           router,
-		service:      service,
-		emailService: email.NewEmailService(config.AppConfig.SMTPHost, config.AppConfig.SMTPPort, config.AppConfig.SMTPFrom),
-		mapper:       NewUserMapper(),
+		gr:             router,
+		service:        service,
+		emailService:   email.NewEmailService(config.AppConfig.SMTPHost, config.AppConfig.SMTPPort, config.AppConfig.SMTPFrom),
+		storageService: storageService,
+		mapper:         NewUserMapper(),
 	}
 
 	// Rutas Públicas
@@ -45,6 +56,7 @@ func NewUserController(router *gin.RouterGroup, service *UserService) *UserContr
 		protected.POST("/logout", uc.logout)
 		protected.GET("/profile", uc.profile)
 		protected.PUT("/profile", uc.updateProfile)
+		protected.PUT("/:id/avatar", uc.uploadAvatar)
 		protected.PUT("/password", uc.updatePassword)
 		protected.PUT("/password-change", uc.changePassword)
 		protected.PUT("/email", uc.changeEmail)
@@ -171,6 +183,41 @@ func (u *UserController) updateProfile(c *gin.Context) {
 
 	user, _ := u.service.FindByID(c.Request.Context(), userID.(uint))
 	u.sendSuccess(c, http.StatusOK, u.mapper.ToDTO(user), "Perfil actualizado exitosamente")
+}
+
+func (u *UserController) uploadAvatar(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		u.sendError(c, http.StatusBadRequest, err, "ID de usuario inválido")
+		return
+	}
+
+	fileHeader, err := c.FormFile("avatar")
+	if err != nil {
+		u.sendError(c, http.StatusBadRequest, err, "Debe enviar un archivo en el campo 'avatar'")
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		u.sendError(c, http.StatusInternalServerError, err, "Error al procesar el archivo")
+		return
+	}
+	defer file.Close()
+
+	avatarUrl, err := u.storageService.UploadAvatar(c.Request.Context(), uint(userID), fileHeader.Filename, file, fileHeader.Size, fileHeader.Header.Get("Content-Type"))
+	if err != nil {
+		u.sendError(c, http.StatusInternalServerError, err, "Error al subir avatar a almacenamiento S3")
+		return
+	}
+
+	_, err = u.service.UpdateAvatar(c.Request.Context(), uint(userID), avatarUrl)
+	if err != nil {
+		u.sendError(c, http.StatusInternalServerError, err, "Error al actualizar avatar en la base de datos")
+		return
+	}
+
+	u.sendSuccess(c, http.StatusOK, gin.H{"avatarUrl": avatarUrl}, "Foto de perfil actualizada exitosamente")
 }
 
 func (u *UserController) updatePassword(c *gin.Context) {

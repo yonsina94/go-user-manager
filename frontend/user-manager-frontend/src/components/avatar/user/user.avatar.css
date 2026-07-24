@@ -1,0 +1,72 @@
+    /* =========================================================
+             COMPONENTE: AVATAR CIRCULAR MODERNO
+    
+      ========================================================= */
+    
+    /* Contenedor principal con posicionamiento para la insignia flotante */
+    .avatar-container {
+      position: relative;
+      display: inline-block;
+      user-select: none;
+    }
+    
+    /* Imagen circular del Avatar */
+    .avatar-image {
+      width: var(--avatar-size, 96px);
+      height: var(--avatar-size, 96px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%; /* Hace el borde completamente circular */
+      object-fit: cover; /* Mantiene el encuadre de la foto sin deformar */
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); /* Sombra suave para elevación */
+      transition: transform 0.2s ease,
+  box-shadow 0.2s ease;
+      background-color: #e2e8f0;
+    }
+    
+    /* Efecto Hover en la foto */
+    .avatar-container:hover .avatar-image
+  {
+      transform: scale(1.03);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Botón flotante para subir/cambiar foto (icono de cámara) */
+    .avatar-upload-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #4f46e5); /* Gradiente moderno */
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ffffff;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .avatar-upload-badge:hover {
+      transform: scale(1.15);
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+    }
+    
+    .avatar-upload-input {
+      display: none; /* Ocultamos el input file feo nativo del navegador */
+    }
+    
+    /* Indicador de carga u homologación*/
+    .avatar-loading-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }

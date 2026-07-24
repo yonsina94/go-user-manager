@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"mime"
 	"net/smtp"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/vanng822/go-premailer/premailer"
@@ -15,9 +17,11 @@ type EmailService struct {
 	smtpHost string
 	smtpPort int
 	fromAddr string
+	smtpUser string
+	smtpPass string
 }
 
-func NewEmailService(host string, port int, from string) *EmailService {
+func NewEmailService(host string, port int, from string, auth ...string) *EmailService {
 	if host == "" {
 		host = "mailpit"
 	}
@@ -27,10 +31,19 @@ func NewEmailService(host string, port int, from string) *EmailService {
 	if from == "" {
 		from = "no-reply@gousermanager.local"
 	}
+	var user, pass string
+	if len(auth) > 0 {
+		user = auth[0]
+	}
+	if len(auth) > 1 {
+		pass = auth[1]
+	}
 	return &EmailService{
 		smtpHost: host,
 		smtpPort: port,
 		fromAddr: from,
+		smtpUser: user,
+		smtpPass: pass,
 	}
 }
 
@@ -67,16 +80,38 @@ func (s *EmailService) SendPasswordResetEmail(ctx context.Context, toEmail, user
 		return fmt.Errorf("error preparando HTML de correo: %w", err)
 	}
 
-	subject := "Subject: Restablecimiento de Contraseña - GoUserManager\n"
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-	msg := []byte(subject + mime + htmlBody)
+	subjectText := "Restablecimiento de Contraseña - GoUserManager"
+	return s.sendMail(toEmail, subjectText, htmlBody)
+}
+
+// sendMail construye cabeceras RFC 5322 con codificación MIME UTF-8 y saltos de línea CRLF (\r\n)
+func (s *EmailService) sendMail(toEmail, subjectText, htmlBody string) error {
+	encodedSubject := mime.BEncoding.Encode("UTF-8", subjectText)
+	msgID := fmt.Sprintf("<%d.%s>", time.Now().UnixNano(), s.fromAddr)
+
+	var msg bytes.Buffer
+	msg.WriteString(fmt.Sprintf("From: %s\r\n", s.fromAddr))
+	msg.WriteString(fmt.Sprintf("To: %s\r\n", toEmail))
+	msg.WriteString(fmt.Sprintf("Subject: %s\r\n", encodedSubject))
+	msg.WriteString(fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123Z)))
+	msg.WriteString(fmt.Sprintf("Message-ID: %s\r\n", msgID))
+	msg.WriteString("MIME-Version: 1.0\r\n")
+	msg.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
+	msg.WriteString("Content-Transfer-Encoding: 8bit\r\n")
+	msg.WriteString("\r\n")
+	msg.WriteString(htmlBody)
 
 	addr := fmt.Sprintf("%s:%d", s.smtpHost, s.smtpPort)
 
-	// Enviar correo via SMTP a Mailpit (puerto 1025)
-	if err := smtp.SendMail(addr, nil, s.fromAddr, []string{toEmail}, msg); err != nil {
+	var auth smtp.Auth
+	if s.smtpUser != "" && s.smtpPass != "" {
+		auth = smtp.PlainAuth("", s.smtpUser, s.smtpPass, s.smtpHost)
+	}
+
+	if err := smtp.SendMail(addr, auth, s.fromAddr, []string{toEmail}, msg.Bytes()); err != nil {
 		return fmt.Errorf("error enviando correo via SMTP: %w", err)
 	}
 
 	return nil
 }
+

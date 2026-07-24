@@ -10,5 +10,5 @@ import (
 func InitModules(db *gorm.DB, lf *logging.LoggerFactory, engine *gin.Engine) {
 	rgApi := engine.Group("/api")
 
-	user.NewUserController(rgApi.Group("/user"), user.NewUserService(db, lf))
+	user.NewUserController(rgApi.Group("/user"), user.NewUserService(db, lf), lf)
 }

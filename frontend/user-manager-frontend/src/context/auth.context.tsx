@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
 import type { User } from "../types/user";
 import { apiService } from "../services/api.service";
 
@@ -6,18 +6,16 @@ interface AuthContextType {
     user: User | null;
     token: string | null;
     isAuthenticated: boolean;
+    isLoading: boolean;
     login: (token: string, user: User) => void;
     logout: () => void;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    // Inicialización síncrona desde localStorage para evitar parpadeos y redirecciones al recargar (F5)
-    const [token, setToken] = useState<string | null>(() => {
-        return localStorage.getItem("token");
-    });
-
+    const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
     const [user, setUser] = useState<User | null>(() => {
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
@@ -32,7 +30,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return null;
     });
 
-    // Validar en segundo plano que el token siga siendo válido en el servidor
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const logout = useCallback(() => {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+    }, []);
+
+    const login = useCallback((newToken: string, newUser: User) => {
+        setToken(newToken);
+        setUser(newUser);
+        localStorage.setItem("token", newToken);
+        localStorage.setItem("user", JSON.stringify(newUser));
+    }, []);
+
+    const refreshUser = useCallback(async () => {
+        if (token) {
+            try {
+                const res = await apiService.getProfile();
+                if (res.data) {
+                    setUser(res.data);
+                    localStorage.setItem("user", JSON.stringify(res.data));
+                }
+            } catch (err) {
+                console.error("Error refreshing user profile:", err);
+            }
+        }
+    }, [token]);
+
+    // 1. Validar token al inicio
     useEffect(() => {
         if (token) {
             apiService.getProfile()
@@ -43,39 +71,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     }
                 })
                 .catch(() => {
-                    // Si el token expiró o es inválido en el backend, cerramos sesión
                     logout();
+                })
+                .finally(() => {
+                    setIsLoading(false);
                 });
+        } else {
+            setIsLoading(false);
         }
-    }, []);
+    }, [token, logout]);
 
-    const login = (newToken: string, newUser: User) => {
-        setToken(newToken);
-        setUser(newUser);
-        localStorage.setItem("token", newToken);
-        localStorage.setItem("user", JSON.stringify(newUser));
-    };
+    // 2. Sincronización multi-pestaña (si se cierra sesión en otra pestaña)
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === "token" && !e.newValue) {
+                logout();
+            }
+        };
 
-    const logout = () => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-    };
+        const handleUnauthorized = () => {
+            logout();
+        };
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                token,
-                isAuthenticated: !!token,
-                login,
-                logout,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
+        window.addEventListener("storage", handleStorageChange);
+        window.addEventListener("unauthorized", handleUnauthorized);
+
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+            window.removeEventListener("unauthorized", handleUnauthorized);
+        };
+    }, [logout]);
+
+    // 3. Memorizar el valor del contexto para evitar re-renders masivos e innecesarios
+    const value = useMemo(
+        () => ({
+            user,
+            token,
+            isAuthenticated: !!token,
+            isLoading,
+            login,
+            logout,
+            refreshUser,
+        }),
+        [user, token, isLoading, login, logout, refreshUser]
     );
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Hook personalizado para consumir el contexto de forma limpia

@@ -2,6 +2,8 @@ version: '3.8'
 
 volumes:
   postgres-data:
+  minio-data:
+  agy-data:
 
 services:
   app:
@@ -14,6 +16,7 @@ services:
 
     volumes:
       - ../..:/workspaces:cached
+      - agy-data:/home/vscode/.gemini
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
@@ -38,8 +41,19 @@ services:
     image: axllent/mailpit:latest
     container_name: mailpit
     restart: unless-stopped
-    ports:
-      - "8025:8025"
-      - "1025:1025"
+    network_mode: service:db
     environment:
       MP_MAX_MESSAGES: 500
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    network_mode: service:db
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+

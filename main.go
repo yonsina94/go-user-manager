@@ -1,11 +1,17 @@
 package main
 
 import (
+	"context"
 	"embed"
+	"errors"
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yonsina94/go-user-manager/config"
@@ -110,8 +116,43 @@ func main() {
 
 	port := config.AppConfig.Port
 
-	log.Printf("Server starting on port %s", port)
-	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
 	}
+
+	// Iniciar el servidor HTTP en una goroutine secundaria
+	go func() {
+		log.Printf("Server starting on port %s", port)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	// Esperar señal de interrupción para apagar el servidor de forma elegante (Graceful Shutdown)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server gracefully...")
+
+	// Contexto con timeout de 5s para que las peticiones activas finalicen
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("Server forced to shutdown: %v", err)
+	}
+
+	// Cerrar las conexiones abiertas de la base de datos
+	if config.DB != nil {
+		if sqlDB, err := config.DB.DB(); err == nil {
+			log.Println("Closing database connections...")
+			if err := sqlDB.Close(); err != nil {
+				log.Printf("Error closing database connections: %v", err)
+			}
+		}
+	}
+
+	log.Println("Server exited cleanly.")
 }

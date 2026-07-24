@@ -7,7 +7,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/main.go",
-      "envFile": "${workspaceFolder}/.env"
+      "envFile": "${workspaceFolder}/.env",
+      "postDebugTask": "Stop Frontend Dev Server"
     },
     {
       "name": "Debug Frontend (Chrome)",
@@ -15,7 +16,8 @@
       "request": "launch",
       "url": "http://localhost:5173",
       "webRoot": "${workspaceFolder}/frontend/user-manager-frontend",
-      "preLaunchTask": "Start Frontend Dev Server"
+      "preLaunchTask": "Start Frontend Dev Server",
+      "postDebugTask": "Stop Frontend Dev Server"
     }
   ],
   "compounds": [
