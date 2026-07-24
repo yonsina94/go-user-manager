@@ -10,8 +10,8 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/yonsina94/go-user-manager/config"
-	"github.com/yonsina94/go-user-manager/logging"
+	"github.com/yonsina94/go-user-manager/internal/config"
+	"github.com/yonsina94/go-user-manager/internal/logging"
 )
 
 type StorageService struct {

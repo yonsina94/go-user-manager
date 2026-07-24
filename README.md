@@ -78,39 +78,27 @@ go-user-manager/
 │   ├── Dockerfile
 │   └── docker-compose.yml
 ├── bin/                         # Binarios generados del servidor (bin/server)
-├── config/                      # Configuración global y conexión a DB
-│   ├── config.go                # Carga de variables de entorno con Viper
-│   └── database.go              # Inicialización de GORM y migraciones automáticas
-├── dto/                         # Data Transfer Objects globales de respuesta
-│   └── response.go
-├── frontend/                    # Aplicación React frontend
+├── frontend/                    # Aplicación React frontend (Feature-First)
 │   └── user-manager-frontend/
 │       ├── src/
-│       │   ├── components/      # Componentes UI (Formularios, Modales, Layouts)
-│       │   ├── context/         # AuthContext para sesión de usuario
-│       │   ├── pages/           # Vistas (Login, Usuarios, Perfil, Recuperar Contraseña)
-│       │   ├── services/        # Cliente API Axios y servicios
-│       │   └── types/           # Definiciones de TypeScript
+│       │   ├── components/      # Componentes UI globales agnósticos
+│       │   ├── features/        # Módulos de dominio (auth, users, settings)
+│       │   ├── layouts/         # Layouts principales de la SPA
+│       │   ├── routes/          # Definición y protección de rutas
+│       │   └── services/        # Cliente API Axios/Fetch y servicios
 │       ├── package.json
 │       └── vite.config.ts
-├── logging/                     # Logger estructurado Slog y middleware de enmascaramiento
-│   ├── factory.go
-│   ├── gin.go
-│   └── masking.go
-├── middleware/                  # Middlewares de Gin (Auth JWT, Roles, CORS)
-│   └── auth.go
-├── modules/                     # Módulos de dominio de la aplicación
-│   └── user/
-│       ├── entities/            # Modelos GORM (User, PasswordResetToken)
-│       ├── user.controller.go   # Handlers HTTP de endpoints
-│       ├── user.dto.go          # DTOs de petición y respuesta de usuario
-│       ├── user.mapper.go       # Transformadores Entity <-> DTO
-│       └── user.service.go      # Lógica de negocio y persistencia
-├── pkg/                         # Paquetes reutilizables
+├── internal/                    # Código interno y privado del backend Go
+│   ├── config/                  # Configuración global y conexión DB
+│   ├── logging/                 # Logger Slog con enmascaramiento de datos CKM
+│   ├── middleware/              # Middlewares de Gin (Auth JWT, Roles, CORS)
+│   ├── modules/                 # Módulos de dominio (user/entities, user.controller.go, etc.)
+│   └── templates/               # Plantillas Templ para correos
+├── pkg/                         # Paquetes reutilizables/globales
+│   ├── dto/                     # DTOs globales de respuesta HTTP (response.go)
 │   ├── email/                   # Servicio de envío de correo SMTP
 │   ├── query/                   # Paginación y criterios de búsqueda DB
 │   └── storage/                 # Almacenamiento en MinIO/S3 para avatares
-├── templates/                   # Plantillas para correos de recuperación
 ├── .air.toml                    # Configuración de live-reload con Air
 ├── .env.example                 # Plantilla de variables de entorno
 ├── Makefile                     # Scripts de automatización de comandos

@@ -1,10 +1,8 @@
-import type { LoginRequest, LoginResponse, LoginResponseDTO } from "../types/login";
+import type { LoginRequest, LoginResponse, LoginResponseDTO, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from "../features/auth/types/auth.types";
 import type { ApiResponse } from "../types/response";
-import type { User, UserDTO, UserRole } from "../types/user";
-import { mapUserDtoToUser, mapUserDtosToUsers } from "../mappers/user.mapper";
-import type { RegisterRequest } from "../types/register";
+import type { User, UserDTO, UserRole } from "../features/users/types/user";
+import { mapUserDtoToUser, mapUserDtosToUsers } from "../features/users/mappers/user.mapper";
 import type { QueryFilter, SearchResponse } from "../types/query";
-import type { ForgotPasswordRequest, ResetPasswordRequest } from "../types/recoverPassword";
 
 const API_BASE_URL = "/api";
 
@@ -14,6 +12,16 @@ export interface UpdateUserRequest {
     email: string;
     role: UserRole;
     active: boolean;
+}
+
+export interface UpdateProfilePayload {
+    name: string;
+    lastName: string;
+}
+
+export interface UpdatePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
 }
 
 const request = async <T = unknown>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
@@ -97,6 +105,28 @@ export const apiService = {
         });
     },
 
+    updateProfile: async (payload: UpdateProfilePayload): Promise<ApiResponse<User>> => {
+        const response = await request<UserDTO>("/user/profile", {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        });
+
+        if (response.data) {
+            return {
+                ...response,
+                data: mapUserDtoToUser(response.data)
+            };
+        }
+
+        return response as unknown as ApiResponse<User>;
+    },
+
+    updatePassword: async (payload: UpdatePasswordPayload): Promise<ApiResponse<void>> => {
+        return request<void>("/user/password", {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        });
+    },
 
     getProfile: async (): Promise<ApiResponse<User>> => {
         const response = await request<UserDTO>("/user/profile", {

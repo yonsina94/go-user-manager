@@ -10,7 +10,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/vanng822/go-premailer/premailer"
-	emailtemplates "github.com/yonsina94/go-user-manager/templates/email"
+	emailtemplates "github.com/yonsina94/go-user-manager/internal/templates/email"
 )
 
 type EmailService struct {

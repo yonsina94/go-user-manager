@@ -1,29 +1,22 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LoginPage } from "./pages/login/Login.page";
-import { ProtectedRoute } from "./components/protected.route";
+import { LoginPage } from "./features/auth/pages/LoginPage";
+import { RecoverPasswordPage } from "./features/auth/pages/RecoverPasswordPage";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { DashboardLayout } from "./layouts/DashboardLayout";
 
-import { RecoveryPasswordPage } from "./pages/recoverPassword/recoverPassword.page";
-import { DashboardLayout } from "./layouts/dashboard/dashboard.layout";
+export const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Ruta Pública de Login */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/recover-password" element={<RecoverPasswordPage />} />
 
-
-
-     // Layout Principal con Sidebar                                                                                                                      
-
-  
-    export const App = () => {
-      return (
-        <BrowserRouter>
-          <Routes>
-            {/* Ruta Pública de Login */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/recover-password" element={<RecoveryPasswordPage />} />
-  
-  
-            {/* Rutas Protegidas que requieren estar logueado */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/*" element={<DashboardLayout />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      );
-    };
+        {/* Rutas Protegidas que requieren estar logueado */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/*" element={<DashboardLayout />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+};

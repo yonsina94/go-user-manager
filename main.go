@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yonsina94/go-user-manager/config"
-	"github.com/yonsina94/go-user-manager/logging"
-	"github.com/yonsina94/go-user-manager/modules"
+	"github.com/yonsina94/go-user-manager/internal/config"
+	"github.com/yonsina94/go-user-manager/internal/logging"
+	"github.com/yonsina94/go-user-manager/internal/modules"
 )
 
 //go:embed web
