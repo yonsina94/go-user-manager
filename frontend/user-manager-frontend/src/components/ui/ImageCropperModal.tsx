@@ -140,8 +140,8 @@ export const ImageCropperModal = ({ imageSrc, isOpen, onClose, onCropComplete }:
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl p-6 shadow-xl max-w-md w-full text-left space-y-5">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-modal-backdrop">
+            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl p-6 shadow-xl max-w-md w-full text-left space-y-5 animate-modal-card">
                 <div className="flex justify-between items-center pb-3 border-b border-[var(--color-rule)]">
                     <div className="flex items-center space-x-2.5">
                         <Crop className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />

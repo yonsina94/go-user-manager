@@ -177,13 +177,15 @@ export const DashboardLayout = () => {
 
             {/* Main Workbench Stage */}
             <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-                <Routes>
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/users" element={<UsersPage />} />
-                    <Route path="/audit-logs" element={<AuditLogsPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="*" element={<Navigate to="/users" replace />} />
-                </Routes>
+                <div key={location.pathname} className="animate-page-entry">
+                    <Routes>
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/users" element={<UsersPage />} />
+                        <Route path="/audit-logs" element={<AuditLogsPage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="*" element={<Navigate to="/users" replace />} />
+                    </Routes>
+                </div>
             </main>
         </div>
     );

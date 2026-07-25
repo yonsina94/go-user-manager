@@ -33,8 +33,8 @@ export const DeleteUserModal = ({ user, isOpen, onClose, onSuccess }: DeleteUser
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl w-full max-w-md p-6 shadow-xl space-y-6 text-left animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-modal-backdrop">
+            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl w-full max-w-md p-6 shadow-xl space-y-6 text-left animate-modal-card">
                 {/* Header */}
                 <div className="flex justify-between items-center border-b border-[var(--color-rule)] pb-4">
                     <div className="flex items-center space-x-2.5 text-[var(--color-danger)]">

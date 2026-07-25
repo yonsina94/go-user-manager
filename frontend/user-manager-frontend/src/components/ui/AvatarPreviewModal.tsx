@@ -43,11 +43,11 @@ export const AvatarPreviewModal = ({
     return createPortal(
         <div
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-modal-backdrop"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-left relative overflow-hidden animate-in zoom-in-95 duration-200"
+                className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-left relative overflow-hidden animate-modal-card"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--color-rule)]">

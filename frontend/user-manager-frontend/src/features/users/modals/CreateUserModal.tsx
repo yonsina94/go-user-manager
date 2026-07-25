@@ -43,8 +43,8 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl w-full max-w-lg p-6 shadow-xl space-y-6 text-left">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-modal-backdrop">
+            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl w-full max-w-lg p-6 shadow-xl space-y-6 text-left animate-modal-card">
                 {/* Header */}
                 <div className="flex justify-between items-center border-b border-[var(--color-rule)] pb-4">
                     <div className="flex items-center space-x-2.5">

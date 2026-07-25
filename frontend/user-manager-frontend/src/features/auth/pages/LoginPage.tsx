@@ -39,7 +39,7 @@ export const LoginPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[var(--color-paper)] p-4 text-left">
-            <div className="w-full max-w-md bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl shadow-sm p-8 space-y-6">
+            <div className="w-full max-w-md bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl shadow-lg p-8 space-y-6 animate-page-entry">
                 <div className="text-center space-y-2">
                     <div className="w-12 h-12 rounded-xl bg-[var(--color-accent)] mx-auto flex items-center justify-center text-[var(--color-accent-ink)] shadow-sm">
                         <Zap className="w-6 h-6 stroke-[2.2]" />
