@@ -40,7 +40,7 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func main() {
-	lf := logging.NewLoggerFactory("INFO", logging.GetDefaultCKMMaskingRules())
+	lf := logging.NewLoggerFactory("INFO", logging.GetDefaultMaskingRules())
 
 	// Connect to the database
 

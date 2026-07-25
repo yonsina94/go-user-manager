@@ -20,6 +20,7 @@ Toda la aplicación frontend se compila y se embebe directamente en un **único 
 - [📁 Estructura del Proyecto](#-estructura-del-proyecto)
 - [⚙️ Variables de Entorno](#️-variables-de-entorno)
 - [🔌 Endpoints de la API REST](#-endpoints-de-la-api-rest)
+- [📊 Exportación a CSV con Struct Tags (`pkg/csv`)](#-exportación-a-csv-con-struct-tags-pkgcsv)
 - [🔒 Seguridad y Logging Enmascarado](#-seguridad-y-logging-enmascarado)
 - [🚀 Instalación y Desarrollo Local](#-instalación-y-desarrollo-local)
 - [🛠️ Comandos de Makefile](#️-comandos-de-makefile)
@@ -60,7 +61,7 @@ Toda la aplicación frontend se compila y se embebe directamente en un **único 
 - **[Go 1.26.4](https://golang.org/)**: Lenguaje principal de alto rendimiento y concurrencia.
 - **[Gin Gonic 1.12](https://github.com/gin-gonic/gin)**: Framework web HTTP rápido y flexible.
 - **[GORM 1.31](https://gorm.io/)**: ORM para interacción fluida con PostgreSQL.
-- **[Slog + Lumberjack + Tint]**: Logging estructurado JSON/Text con colores en consola, rotación de archivos y **CKM Masking** para ocultar contraseñas, tokens y emails.
+- **[Slog + Lumberjack + Tint]**: Logging estructurado JSON/Text con colores en consola, rotación de archivos y **Data Masking** para ocultar contraseñas, tokens y emails.
 - **[MinIO Go SDK 7.2](https://min.io/)**: Almacenamiento de objetos compatible con AWS S3 para avatares.
 - **[Templ 0.3](https://templ.guide/)**: Componentes y plantillas HTML con tipado estricto en Go.
 - **[Viper 1.21](https://github.com/spf13/viper)**: Gestión centralizada de configuración y variables de entorno.
@@ -119,7 +120,7 @@ go-user-manager/
 │       └── .oxlintrc.json
 ├── internal/                    # Código privado de la aplicación Go
 │   ├── config/                  # Configuración con Viper y conexión a PostgreSQL (SKIP_DB_CONNECT)
-│   ├── logging/                 # Logging estructurado Slog, Tint handler y CKM Masking
+│   ├── logging/                 # Logging estructurado Slog, Tint handler y Data Masking
 │   ├── middleware/              # Middlewares de Gin (Auth JWT, Roles, CORS, Slog Logger)
 │   ├── modules/                 # Módulos de dominio de backend
 │   │   ├── audit/               # Módulo de Auditoría (AuditController, AuditService, AuditLog Entity)
@@ -221,9 +222,32 @@ Todas las rutas principales de la API están agrupadas bajo el prefijo `/api/use
 
 ---
 
+## 📊 Exportación a CSV con Struct Tags (`pkg/csv`)
+
+El paquete genérico `pkg/csv` permite exportar cualquier slice de estructuras Go a formato CSV procesando etiquetas personalizadas `csv:"..."` directamente en los DTOs:
+
+### Sintaxis de Etiquetas
+```go
+`csv:"NombreColumna;param1:valor1;param2:valor2"`
+```
+
+### Opciones de Formateo Soportadas
+
+| Atributo | Ejemplo | Descripción |
+| :--- | :--- | :--- |
+| `case` | `csv:"Nombre;case:title"` | Convierte el texto a `upper` (mayúsculas), `lower` (minúsculas) o `title` (Capitalizado). |
+| `boolean` | `csv:"Estado;boolean:Activo/Inactivo"` | Traduce valores booleanos a etiquetas personalizadas (`true` ➔ `"Activo"`, `false` ➔ `"Inactivo"`). |
+| `date_format` | `csv:"Fecha;date_format:02/01/2006 15:04"` | Formatea campos de fecha (`time.Time` o ISO strings) usando el layout de Go. |
+| `default` | `csv:"Teléfono;default:N/A"` | Asigna un valor por defecto cuando el campo está vacío o es nulo. |
+| `prefix` / `suffix` | `csv:"Monto;prefix:$"` / `csv:"Puntos;suffix: pts"` | Agrega prefijos o sufijos a los valores representados. |
+| `truncate` | `csv:"Bio;truncate:30"` | Trunca textos largos a $N$ caracteres agregando puntos suspensivos (`...`). |
+| `-` | `csv:"-"` | Ignora el campo para que no se incluya en el reporte CSV. |
+
+---
+
 ## 🔒 Seguridad y Logging Enmascarado
 
-El proyecto cuenta con un módulo especializado de **Logging con CKM Data Masking** (`internal/logging/masking.go`):
+El proyecto cuenta con un módulo especializado de **Logging con Data Masking** (`internal/logging/masking.go`):
 - Oculta automáticamente información confidencial (contraseñas, tokens JWT, correos electrónicos y datos personales) antes de escribirlos en los logs o stdout.
 - Utiliza enmascaramiento dinámico (por ejemplo: `usr_****@domain.com` o `****`) mediante reglas y expresiones configurables.
 - Formato de logs estructurado con `log/slog` y formateador de color en consola (`lmittmann/tint`).

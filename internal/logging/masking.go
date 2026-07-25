@@ -65,15 +65,10 @@ func MaskJWTToken(value slog.Value) any {
 	return fmt.Sprintf("%s...[TRUNCATED]...%s", str[:10], str[len(str)-10:])
 }
 
-// GetDefaultCKMMaskingRules returns the masking rules for sensitive cryptographic fields in CKM.
-func GetDefaultCKMMaskingRules() MaskingRules {
+// GetDefaultMaskingRules returns the masking rules for sensitive cryptographic fields.
+func GetDefaultMaskingRules() MaskingRules {
 	return MaskingRules{
-		"privateKey":  MaskAll,
-		"private_key": MaskAll,
-		"aesKey":      MaskAll,
-		"aes_key":     MaskAll,
-		"token":       MaskJWTToken,
-		"licenseKey":  MaskJWTToken,
-		"email":       MaskEmail,
+		"token": MaskJWTToken,
+		"email": MaskEmail,
 	}
 }
