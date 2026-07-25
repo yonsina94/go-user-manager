@@ -17,7 +17,7 @@ El frontend está estructurado siguiendo la arquitectura **Feature-First (orient
 src/
 ├── assets/                    # Archivos estáticos globales (imágenes, iconos)
 ├── components/                # Componentes UI agnósticos al dominio (Design System)
-│   └── ui/                    # AvatarPreviewModal (Lightbox), UserAvatar, ImageCropperModal, Pagination
+│   └── ui/                    # Modal (Compound Component), AvatarPreviewModal, UserAvatar, ImageCropperModal, Pagination
 ├── context/                   # Contextos globales (ThemeContext - Auto Dark Mode)
 ├── features/                  # 🚀 Módulos independientes de negocio
 │   ├── audit/                 # 📋 Módulo de Auditoría (AuditLogsPage, AuditDetailModal, tipos)

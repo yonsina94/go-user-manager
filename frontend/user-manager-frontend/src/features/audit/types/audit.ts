@@ -6,6 +6,8 @@ export const AuditAction = {
     USER_DELETED: "USER_DELETED",
     AVATAR_UPLOADED: "AVATAR_UPLOADED",
     PASSWORD_CHANGED: "PASSWORD_CHANGED",
+    USER_EXPORTED: "USER_EXPORTED",
+    USER_LOGOUT: "USER_LOGOUT",
 } as const;
 
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];

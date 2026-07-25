@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/yonsina94/go-user-manager/internal/logging"
+	authentities "github.com/yonsina94/go-user-manager/internal/modules/auth/entities"
 	"github.com/yonsina94/go-user-manager/internal/modules/enums"
-	"github.com/yonsina94/go-user-manager/internal/modules/user/entities"
+	userentities "github.com/yonsina94/go-user-manager/internal/modules/user/entities"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func ConnectDatabase(logFactory *logging.LoggerFactory) {
 	}
 
 	// Auto Migrate the schemas
-	err = database.AutoMigrate(&entities.User{}, &entities.PasswordResetToken{})
+	err = database.AutoMigrate(&userentities.User{}, &userentities.PasswordResetToken{}, &authentities.InvalidatedToken{})
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -61,7 +62,7 @@ func SeedDefaultAdminUser(db *gorm.DB) {
 	}
 
 	var count int64
-	if err := db.Model(&entities.User{}).Count(&count).Error; err != nil {
+	if err := db.Model(&userentities.User{}).Count(&count).Error; err != nil {
 		log.Printf("Error checking user count for seeding: %v", err)
 		return
 	}
@@ -77,7 +78,7 @@ func SeedDefaultAdminUser(db *gorm.DB) {
 			return
 		}
 
-		adminUser := entities.User{
+		adminUser := userentities.User{
 			Name:     "Administrador",
 			LastName: "Sistema",
 			Username: username,

@@ -12,6 +12,7 @@ import (
 	"github.com/yonsina94/go-user-manager/internal/logging"
 	"github.com/yonsina94/go-user-manager/internal/modules/enums"
 	"github.com/yonsina94/go-user-manager/internal/modules/user/entities"
+	pkgcsv "github.com/yonsina94/go-user-manager/pkg/csv"
 	"github.com/yonsina94/go-user-manager/pkg/query"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -395,4 +396,33 @@ func (u *UserService) ResetPasswordWithToken(ctx context.Context, tokenStr, newP
 
 	u.logger.InfoContext(ctx, "Password reset successfully executed with token", slog.Uint64("userId", uint64(resetRecord.UserID)))
 	return true, nil
+}
+
+// ExportCSV genera un archivo CSV con la lista de usuarios procesando automáticamente las etiquetas `csv:"..."` del struct UserDTO.
+func (u *UserService) ExportCSV(ctx context.Context, filter *query.QueryFilter) ([]byte, error) {
+	u.logger.DebugContext(ctx, "Generating CSV export for users via struct tags")
+
+	// Si hay paginación definida, la removemos para exportar todos los usuarios que coincidan con los filtros
+	exportFilter := *filter
+	exportFilter.Pagination = nil
+
+	var users []entities.User
+	err := u.db.WithContext(ctx).
+		Scopes(query.ApplyQueryFilter(&exportFilter)).
+		Find(&users).Error
+
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Error retrieving users for CSV export", slog.Any("error", err))
+		return nil, err
+	}
+
+	dtos := ToUserDTOs(users)
+	csvData, err := pkgcsv.MarshalCSV(dtos)
+	if err != nil {
+		u.logger.ErrorContext(ctx, "Error marshaling users to CSV", slog.Any("error", err))
+		return nil, err
+	}
+
+	u.logger.InfoContext(ctx, "CSV export generated successfully via struct tags", slog.Int("count", len(users)))
+	return csvData, nil
 }

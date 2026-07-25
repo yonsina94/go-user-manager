@@ -33,6 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const logout = useCallback(() => {
+        apiService.logout().catch((err) => {
+            console.error("Error al inhabilitar token en servidor:", err);
+        });
         setToken(null);
         setUser(null);
         localStorage.removeItem("token");

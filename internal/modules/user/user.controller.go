@@ -5,12 +5,15 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yonsina94/go-user-manager/internal/config"
 	"github.com/yonsina94/go-user-manager/internal/logging"
 	"github.com/yonsina94/go-user-manager/internal/middleware"
 	"github.com/yonsina94/go-user-manager/internal/modules/audit"
+	"github.com/yonsina94/go-user-manager/internal/modules/auth"
 	"github.com/yonsina94/go-user-manager/internal/modules/commons/transformer"
 	"github.com/yonsina94/go-user-manager/internal/modules/enums"
 	"github.com/yonsina94/go-user-manager/internal/modules/user/entities"
@@ -21,15 +24,16 @@ import (
 )
 
 type UserController struct {
-	gr             *gin.RouterGroup
-	service        *UserService
-	auditService   *audit.AuditService
-	emailService   *email.EmailService
-	storageService *storage.StorageService
-	mapper         transformer.Transformer[entities.User, UserDTO]
+	gr               *gin.RouterGroup
+	service          *UserService
+	auditService     *audit.AuditService
+	blacklistService *auth.TokenBlacklistService
+	emailService     *email.EmailService
+	storageService   *storage.StorageService
+	mapper           transformer.Transformer[entities.User, UserDTO]
 }
 
-func NewUserController(router *gin.RouterGroup, service *UserService, auditService *audit.AuditService, lf *logging.LoggerFactory) *UserController {
+func NewUserController(router *gin.RouterGroup, service *UserService, auditService *audit.AuditService, blacklistService *auth.TokenBlacklistService, lf *logging.LoggerFactory) *UserController {
 
 	storageService, err := storage.NewStorageService(lf)
 
@@ -38,12 +42,13 @@ func NewUserController(router *gin.RouterGroup, service *UserService, auditServi
 	}
 
 	uc := &UserController{
-		gr:             router,
-		service:        service,
-		auditService:   auditService,
-		emailService:   email.NewEmailService(config.AppConfig.SMTPHost, config.AppConfig.SMTPPort, config.AppConfig.SMTPFrom),
-		storageService: storageService,
-		mapper:         NewUserMapper(),
+		gr:               router,
+		service:          service,
+		auditService:     auditService,
+		blacklistService: blacklistService,
+		emailService:     email.NewEmailService(config.AppConfig.SMTPHost, config.AppConfig.SMTPPort, config.AppConfig.SMTPFrom),
+		storageService:   storageService,
+		mapper:           NewUserMapper(),
 	}
 
 	// Rutas Públicas
@@ -76,6 +81,7 @@ func NewUserController(router *gin.RouterGroup, service *UserService, auditServi
 		adminOnly.PUT("/status", uc.changeStatus)
 		adminOnly.GET("/users", uc.getUsers)
 		adminOnly.POST("/search", uc.searchUsers)
+		adminOnly.POST("/export/csv", uc.exportUsersCSV)
 		adminOnly.PUT("/:id", uc.updateUserByAdmin)
 		adminOnly.DELETE("/:id", uc.deleteUserByAdmin)
 	}
@@ -198,6 +204,37 @@ func (u *UserController) login(c *gin.Context) {
 }
 
 func (u *UserController) logout(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	parts := strings.Split(authHeader, " ")
+	if len(parts) == 2 && parts[0] == "Bearer" {
+		tokenStr := parts[1]
+		_ = u.blacklistService.InvalidateToken(c.Request.Context(), tokenStr, string(middleware.JWTSecret))
+	}
+
+	userIDVal, exists := c.Get("userID")
+	var userID *uint
+	var userEmail string
+	if exists {
+		id := userIDVal.(uint)
+		userID = &id
+		if usr, err := u.service.FindByID(c.Request.Context(), id); err == nil {
+			userEmail = usr.Email
+		}
+	}
+
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    userID,
+		UserEmail: userEmail,
+		Action:    enums.AuditActionUserLogout,
+		Entity:    enums.AuditEntityAuth,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   "Cierre de sesión exitoso y token revocado",
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
+
 	u.sendSuccess(c, http.StatusOK, nil, "Cierre de sesión exitoso")
 }
 
@@ -637,4 +674,45 @@ func (u *UserController) searchUsers(c *gin.Context) {
 		"items": usersDTO,
 		"total": total,
 	}, "Búsqueda ejecutada exitosamente")
+}
+
+func (u *UserController) exportUsersCSV(c *gin.Context) {
+	var filter query.QueryFilter
+	// Si viene un cuerpo JSON con filtros, los parseamos; si no, usará filtro default
+	_ = c.ShouldBindJSON(&filter)
+
+	csvData, err := u.service.ExportCSV(c.Request.Context(), &filter)
+	if err != nil {
+		u.sendError(c, http.StatusInternalServerError, err, "Error al generar la exportación a CSV")
+		return
+	}
+
+	authUserID, _ := c.Get("userID")
+	var adminID *uint
+	var adminEmail string
+	if authUserID != nil {
+		idVal := authUserID.(uint)
+		adminID = &idVal
+		if adminUser, err := u.service.FindByID(c.Request.Context(), idVal); err == nil {
+			adminEmail = adminUser.Email
+		}
+	}
+
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    adminID,
+		UserEmail: adminEmail,
+		Action:    enums.AuditActionUserExported,
+		Entity:    enums.AuditEntityUser,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   "Exportación de usuarios a CSV ejecutada",
+		Payload:   `{"export_format": "csv"}`,
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
+
+	filename := fmt.Sprintf("usuarios_export_%s.csv", time.Now().Format("20060102_150405"))
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Data(http.StatusOK, "text/csv; charset=utf-8", csvData)
 }

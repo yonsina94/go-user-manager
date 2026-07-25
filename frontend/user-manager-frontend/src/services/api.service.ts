@@ -106,6 +106,12 @@ export const apiService = {
         });
     },
 
+    logout: async (): Promise<ApiResponse<void>> => {
+        return request<void>("/user/logout", {
+            method: "POST"
+        });
+    },
+
     updateProfile: async (payload: UpdateProfilePayload): Promise<ApiResponse<User>> => {
         const response = await request<UserDTO>("/user/profile", {
             method: "PUT",
@@ -199,6 +205,28 @@ export const apiService = {
         }
 
         return response as unknown as ApiResponse<SearchResponse<User>>;
+    },
+
+    exportUsersCSV: async (filter: QueryFilter): Promise<Blob> => {
+        const token = localStorage.getItem("token");
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+        };
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/user/export/csv`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(filter),
+        });
+
+        if (!response.ok) {
+            throw new Error("Error al exportar los usuarios a CSV");
+        }
+
+        return await response.blob();
     },
 
     searchAuditLogs: async (filter: QueryFilter): Promise<ApiResponse<SearchResponse<AuditLog>>> => {

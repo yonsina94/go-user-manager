@@ -9,7 +9,7 @@ import { DeleteUserModal } from "../modals/DeleteUserModal";
 import { UserAvatar } from "../../../components/ui/UserAvatar";
 import { useAuth } from "../../auth/context/AuthContext";
 import { Pagination } from "../../../components/ui/Pagination";
-import { Search, UserPlus, Edit3, Trash2, Shield, User as UserIcon, CheckCircle2, XCircle } from "lucide-react";
+import { Search, UserPlus, Edit3, Trash2, Shield, User as UserIcon, CheckCircle2, XCircle, Download } from "lucide-react";
 
 /* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 
@@ -48,7 +48,53 @@ export const UsersPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [exportingCSV, setExportingCSV] = useState<boolean>(false);
 
+  const handleExportCSV = async () => {
+    try {
+      setExportingCSV(true);
+      const filter: QueryFilter = {
+        filters: {},
+        orderBy: {},
+      };
+
+      if (roleFilter !== "ALL") {
+        filter.filters!["role"] = roleFilter;
+      }
+      if (statusFilter === "ACTIVE") {
+        filter.filters!["active"] = true;
+      } else if (statusFilter === "INACTIVE") {
+        filter.filters!["active"] = false;
+      }
+      if (searchQuery.trim()) {
+        filter.search = {
+          or: {
+            name: { operator: QueryOperator.CONTAINS, value: searchQuery.trim() },
+            lastName: { operator: QueryOperator.CONTAINS, value: searchQuery.trim() },
+            username: { operator: QueryOperator.CONTAINS, value: searchQuery.trim() },
+            email: { operator: QueryOperator.CONTAINS, value: searchQuery.trim() },
+          },
+        };
+      }
+
+      const [sortField, sortDir] = sortOrder.split("_");
+      filter.orderBy![sortField] = { order: sortDir };
+
+      const blob = await apiService.exportUsersCSV(filter);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `usuarios_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message || new Error("Error al exportar los usuarios a CSV"));
+    } finally {
+      setExportingCSV(false);
+    }
+  };
 
   // Función de búsqueda dinámica usando el QueryFilter pattern
   const executeFilter = useCallback(async () => {
@@ -121,7 +167,7 @@ export const UsersPage = () => {
 
   return (
     <div className="space-y-6 text-left">
-      {/* Header y Botón Nuevo Usuario */}
+      {/* Header y Botones de Acción */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] tracking-tight">
@@ -131,13 +177,25 @@ export const UsersPage = () => {
             Gestión centralizada y búsqueda dinámica de cuentas de usuario.
           </p>
         </div>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-ink)] font-semibold text-sm rounded-xl shadow-sm transition-colors duration-150 cursor-pointer self-start md:self-auto"
-        >
-          <UserPlus className="w-4 h-4 stroke-[2]" />
-          <span>Nuevo Usuario</span>
-        </button>
+
+        <div className="flex items-center gap-3 self-start md:self-auto">
+          <button
+            onClick={handleExportCSV}
+            disabled={exportingCSV}
+            className="inline-flex items-center space-x-2 px-3.5 py-2.5 bg-[var(--color-paper-2)] hover:bg-[var(--color-paper-3)] text-[var(--color-ink)] border border-[var(--color-rule)] font-semibold text-sm rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <Download className="w-4 h-4 stroke-[2]" />
+            <span>{exportingCSV ? "Exportando..." : "Exportar CSV"}</span>
+          </button>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-ink)] font-semibold text-sm rounded-xl shadow-sm transition-colors duration-150 cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4 stroke-[2]" />
+            <span>Nuevo Usuario</span>
+          </button>
+        </div>
       </div>
 
       {/* Toolbar de Filtros Dinámicos */}

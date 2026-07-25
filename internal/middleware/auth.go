@@ -50,6 +50,13 @@ func ValidateToken(tokenString string) (*JWTClaims, error) {
 	return claims, nil
 }
 
+var tokenBlacklistChecker func(tokenStr string) bool
+
+// SetTokenBlacklistChecker registra la función de verificación de blacklist en el middleware
+func SetTokenBlacklistChecker(checker func(tokenStr string) bool) {
+	tokenBlacklistChecker = checker
+}
+
 // AuthMiddleware es el middleware de Gin para verificar autenticación JWT.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -67,7 +74,16 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := ValidateToken(parts[1])
+		tokenStr := parts[1]
+
+		// Verificar si el token fue revocado en la lista negra
+		if tokenBlacklistChecker != nil && tokenBlacklistChecker(tokenStr) {
+			c.JSON(http.StatusUnauthorized, dto.NewErrorResponse("Sesión cerrada. El token ha sido revocado", "Token revocado"))
+			c.Abort()
+			return
+		}
+
+		claims, err := ValidateToken(tokenStr)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, dto.NewErrorResponse(err.Error(), "Sesión inválida o expirada"))
 			c.Abort()

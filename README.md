@@ -33,6 +33,7 @@ Toda la aplicación frontend se compila y se embebe directamente en un **único 
 ### 🔑 Autenticación y Autorización
 - **Registro de usuarios y Login de sesión**: Cifrado seguro de contraseñas mediante **Bcrypt**.
 - **Autenticación mediante JWT (JSON Web Tokens)**: Middleware de validación Bearer Token en endpoints protegidos.
+- **Revocación de Tokens JWT (Lista Negra / Blacklist)**: Inhabilitación inmediata de tokens al cerrar sesión (`POST /api/user/logout`), almacenados con hash SHA-256 en PostgreSQL e inspeccionados en `AuthMiddleware`.
 - **Control de Acceso basado en Roles (RBAC)**: Distinción entre roles de `Administrador` y `Usuario`.
 - **Recuperación de Contraseña**: Generación de tokens de restablecimiento temporales con expiración y envío de plantillas HTML compiladas con **Templ** a través de SMTP (**Mailpit** en desarrollo).
 
@@ -41,9 +42,10 @@ Toda la aplicación frontend se compila y se embebe directamente en un **único 
 - **Gestión de Avatares y Lightbox**: Subida, recortado interactivo en HD, almacenamiento S3 (**MinIO / AWS S3**) y previsualización extendida (*Lightbox*) con descarga al hacer clic en fotos de perfil.
 - **Panel de Administración**: Gestión completa de usuarios (CRUD), asignación de roles (`Usuario` / `Administrador`), activación/desactivación de cuentas y **Modal de Confirmación de Eliminación** estético.
 - **Búsqueda y Paginación**: Filtrado dinámico por parámetros de búsqueda y paginación en backend y frontend.
+- **Exportación de Reportes a CSV (Rich Struct Tags)**: Generación streaming de reportes CSV procesando dinámicamente etiquetas estructuradas `csv:"Header;case:title;boolean:Activo/Inactivo;date_format:..."` en DTOs ([pkg/csv](file:///workspaces/go-user-manager/pkg/csv/csv.go)), con formateo de fechas, mayúsculas/minúsculas, truncado, prefijos/sufijos y firma BOM UTF-8 para Excel.
 
 ### 📋 Módulo de Auditoría y Trazabilidad de Seguridad (Audit Logs)
-- **Registro Automático de Eventos**: Registro persistente en PostgreSQL de acciones críticas del sistema (`USER_LOGIN`, `USER_LOGIN_FAILED`, `USER_CREATED`, `USER_UPDATED`, `USER_DELETED`, `AVATAR_UPLOADED`, `PASSWORD_CHANGED`).
+- **Registro Automático de Eventos**: Registro persistente en PostgreSQL de acciones críticas del sistema (`USER_LOGIN`, `USER_LOGIN_FAILED`, `USER_CREATED`, `USER_UPDATED`, `USER_DELETED`, `AVATAR_UPLOADED`, `PASSWORD_CHANGED`, `USER_EXPORTED`, `USER_LOGOUT`).
 - **Captura de Metadatos**: Captura IP de origen, User-Agent, método HTTP, ruta, estado, correo de usuario y **payload de la petición (JSON)**.
 - **Consola de Auditoría en Frontend (`AuditLogsPage`)**: Interfaz dedicada para administradores con filtrado por tipo de evento, búsqueda por IP/correo, paginación dinámica y **Modal de Inspección de Payloads (`AuditDetailModal`)**.
 
@@ -196,7 +198,7 @@ Todas las rutas principales de la API están agrupadas bajo el prefijo `/api/use
 - `POST /api/user/reset-password` - Restablecimiento de contraseña utilizando un token válido.
 
 ### 🔒 Endpoints Protegidos (Requieren cabecera `Authorization: Bearer <token>`)
-- `POST /api/user/logout` - Cierre de sesión del usuario.
+- `POST /api/user/logout` - Cierre de sesión del usuario e inhabilitación inmediata del token en la lista negra (*JWT Blacklist*).
 - `GET /api/user/profile` - Obtener información del perfil del usuario autenticado.
 - `PUT /api/user/profile` - Actualizar información del perfil (nombre, apellido).
 - `PUT /api/user/:id/avatar` - Subir/actualizar foto de perfil (Multipart Form Data).
@@ -210,6 +212,8 @@ Todas las rutas principales de la API están agrupadas bajo el prefijo `/api/use
 ### 👑 Endpoints de Administrador (Requieren Rol `Administrador`)
 - `GET /api/user/users` - Lista paginada de todos los usuarios registrados.
 - `POST /api/user/search` - Búsqueda avanzada y filtrada de usuarios.
+- `POST /api/user/export/csv` - Exportar el listado de usuarios filtrados a archivo CSV.
+- `POST /api/audit-logs/search` - Búsqueda y filtrado de la bitácora de eventos de auditoría.
 - `PUT /api/user/role` - Asignar nuevo rol a un usuario (`Usuario` / `Administrador`).
 - `PUT /api/user/status` - Activar o desactivar cuenta de usuario.
 - `PUT /api/user/:id` - Actualizar datos de un usuario desde el panel de administración.

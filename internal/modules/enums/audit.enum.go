@@ -10,6 +10,8 @@ const (
 	AuditActionUserDeleted     AuditAction = "USER_DELETED"
 	AuditActionAvatarUploaded  AuditAction = "AVATAR_UPLOADED"
 	AuditActionPasswordChanged AuditAction = "PASSWORD_CHANGED"
+	AuditActionUserExported    AuditAction = "USER_EXPORTED"
+	AuditActionUserLogout      AuditAction = "USER_LOGOUT"
 )
 
 type AuditEntity string

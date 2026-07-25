@@ -7,16 +7,16 @@ import (
 
 // UserDTO representa los datos del usuario expuestos al frontend (sin contraseña).
 type UserDTO struct {
-	ID        uint           `json:"id"`
-	Name      string         `json:"name"`
-	LastName  string         `json:"lastName"`
-	Username  string         `json:"username"`
-	Email     string         `json:"email"`
-	AvatarUrl string         `json:"avatarUrl,omitempty"`
-	Role      enums.UserRole `json:"role"`
-	Active    bool           `json:"active"`
-	CreatedAt string         `json:"createdAt"`
-	UpdatedAt string         `json:"updatedAt"`
+	ID        uint           `json:"id" csv:"ID"`
+	Name      string         `json:"name" csv:"Nombre;case:title"`
+	LastName  string         `json:"lastName" csv:"Apellido;case:title"`
+	Username  string         `json:"username" csv:"Nombre de Usuario;case:lower"`
+	Email     string         `json:"email" csv:"Correo Electrónico;case:lower"`
+	AvatarUrl string         `json:"avatarUrl,omitempty" csv:"-"`
+	Role      enums.UserRole `json:"role" csv:"Rol;case:upper"`
+	Active    bool           `json:"active" csv:"Estado;boolean:Activo/Inactivo"`
+	CreatedAt string         `json:"createdAt" csv:"Fecha de Creación;date_format:02/01/2006 15:04"`
+	UpdatedAt string         `json:"updatedAt" csv:"-"`
 }
 
 // RegisterRequest representa los datos de entrada para registrar un usuario.
