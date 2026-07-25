@@ -10,6 +10,7 @@ import (
 	"github.com/yonsina94/go-user-manager/internal/config"
 	"github.com/yonsina94/go-user-manager/internal/logging"
 	"github.com/yonsina94/go-user-manager/internal/middleware"
+	"github.com/yonsina94/go-user-manager/internal/modules/audit"
 	"github.com/yonsina94/go-user-manager/internal/modules/commons/transformer"
 	"github.com/yonsina94/go-user-manager/internal/modules/enums"
 	"github.com/yonsina94/go-user-manager/internal/modules/user/entities"
@@ -22,12 +23,13 @@ import (
 type UserController struct {
 	gr             *gin.RouterGroup
 	service        *UserService
+	auditService   *audit.AuditService
 	emailService   *email.EmailService
 	storageService *storage.StorageService
 	mapper         transformer.Transformer[entities.User, UserDTO]
 }
 
-func NewUserController(router *gin.RouterGroup, service *UserService, lf *logging.LoggerFactory) *UserController {
+func NewUserController(router *gin.RouterGroup, service *UserService, auditService *audit.AuditService, lf *logging.LoggerFactory) *UserController {
 
 	storageService, err := storage.NewStorageService(lf)
 
@@ -38,6 +40,7 @@ func NewUserController(router *gin.RouterGroup, service *UserService, lf *loggin
 	uc := &UserController{
 		gr:             router,
 		service:        service,
+		auditService:   auditService,
 		emailService:   email.NewEmailService(config.AppConfig.SMTPHost, config.AppConfig.SMTPPort, config.AppConfig.SMTPFrom),
 		storageService: storageService,
 		mapper:         NewUserMapper(),
@@ -129,12 +132,38 @@ func (u *UserController) login(c *gin.Context) {
 
 	userEntity, err := u.service.FindByUsername(c.Request.Context(), req.Username)
 	if err != nil {
+		u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+			UserEmail: req.Username,
+			Action:    enums.AuditActionUserLoginFailed,
+			Entity:    enums.AuditEntityAuth,
+			Status:    enums.AuditStatusFailed,
+			Method:    c.Request.Method,
+			Path:      c.Request.URL.Path,
+			Details:   "Intento de inicio de sesión con usuario inexistente",
+			Payload:   fmt.Sprintf(`{"username": "%s"}`, req.Username),
+			IP:        c.ClientIP(),
+			UserAgent: c.Request.UserAgent(),
+		})
 		u.sendError(c, http.StatusUnauthorized, err, "Credenciales incorrectas")
 		return
 	}
 
 	// Comparar la contraseña plana contra el hash almacenado
 	if !userEntity.ComparePassword(req.Password) {
+		u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+			UserID:    &userEntity.ID,
+			UserEmail: userEntity.Email,
+			Action:    enums.AuditActionUserLoginFailed,
+			Entity:    enums.AuditEntityAuth,
+			EntityID:  &userEntity.ID,
+			Status:    enums.AuditStatusFailed,
+			Method:    c.Request.Method,
+			Path:      c.Request.URL.Path,
+			Details:   "Contraseña incorrecta ingresada",
+			Payload:   fmt.Sprintf(`{"username": "%s", "email": "%s"}`, req.Username, userEntity.Email),
+			IP:        c.ClientIP(),
+			UserAgent: c.Request.UserAgent(),
+		})
 		u.sendError(c, http.StatusUnauthorized, nil, "Credenciales incorrectas")
 		return
 	}
@@ -145,6 +174,21 @@ func (u *UserController) login(c *gin.Context) {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al generar token de sesión")
 		return
 	}
+
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    &userEntity.ID,
+		UserEmail: userEntity.Email,
+		Action:    enums.AuditActionUserLogin,
+		Entity:    enums.AuditEntityAuth,
+		EntityID:  &userEntity.ID,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   "Inicio de sesión exitoso",
+		Payload:   fmt.Sprintf(`{"role": "%s"}`, userEntity.Role),
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
 
 	userDTO := u.mapper.ToDTO(userEntity)
 	u.sendSuccess(c, http.StatusOK, LoginResponse{
@@ -229,6 +273,21 @@ func (u *UserController) uploadAvatar(c *gin.Context) {
 		_ = u.storageService.DeleteAvatarByUrl(c.Request.Context(), oldAvatarUrl)
 	}
 
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    &currentUser.ID,
+		UserEmail: currentUser.Email,
+		Action:    enums.AuditActionAvatarUploaded,
+		Entity:    enums.AuditEntityUser,
+		EntityID:  &currentUser.ID,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   "Foto de perfil actualizada exitosamente en almacenamiento S3",
+		Payload:   fmt.Sprintf(`{"file_size": %d, "content_type": "%s", "avatar_url": "%s"}`, fileHeader.Size, fileHeader.Header.Get("Content-Type"), avatarUrl),
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
+
 	u.sendSuccess(c, http.StatusOK, gin.H{"avatarUrl": avatarUrl}, "Foto de perfil actualizada exitosamente")
 }
 
@@ -256,6 +315,21 @@ func (u *UserController) updatePassword(c *gin.Context) {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al actualizar contraseña")
 		return
 	}
+
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    &user.ID,
+		UserEmail: user.Email,
+		Action:    enums.AuditActionPasswordChanged,
+		Entity:    enums.AuditEntityUser,
+		EntityID:  &user.ID,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   "Contraseña de usuario cambiada exitosamente",
+		Payload:   `{"password_status": "updated_hash"}`,
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
 
 	u.sendSuccess(c, http.StatusOK, nil, "Contraseña actualizada exitosamente")
 }
@@ -465,11 +539,38 @@ func (u *UserController) updateUserByAdmin(c *gin.Context) {
 		Active:   req.Active,
 	}
 
-	_, err = u.service.Update(c.Request.Context(), uint(id), &userEntity)
+	targetID := uint(id)
+	_, err = u.service.Update(c.Request.Context(), targetID, &userEntity)
 	if err != nil {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al actualizar usuario")
 		return
 	}
+
+	authUserID, _ := c.Get("userID")
+	var adminID *uint
+	var adminEmail string
+	if authUserID != nil {
+		idVal := authUserID.(uint)
+		adminID = &idVal
+		if adminUser, err := u.service.FindByID(c.Request.Context(), idVal); err == nil {
+			adminEmail = adminUser.Email
+		}
+	}
+
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    adminID,
+		UserEmail: adminEmail,
+		Action:    enums.AuditActionUserUpdated,
+		Entity:    enums.AuditEntityUser,
+		EntityID:  &targetID,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   fmt.Sprintf("Usuario actualizado por administrador (Target Email: %s)", req.Email),
+		Payload:   fmt.Sprintf(`{"updated_fields": {"name": "%s", "lastname": "%s", "email": "%s", "role": "%s", "active": %t}}`, req.Name, req.LastName, req.Email, req.Role, req.Active),
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
 
 	u.sendSuccess(c, http.StatusOK, nil, "Usuario actualizado exitosamente")
 }
@@ -482,11 +583,38 @@ func (u *UserController) deleteUserByAdmin(c *gin.Context) {
 		return
 	}
 
-	_, err = u.service.Delete(c.Request.Context(), uint(id))
+	targetID := uint(id)
+	_, err = u.service.Delete(c.Request.Context(), targetID)
 	if err != nil {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al eliminar usuario")
 		return
 	}
+
+	authUserID, _ := c.Get("userID")
+	var adminID *uint
+	var adminEmail string
+	if authUserID != nil {
+		idVal := authUserID.(uint)
+		adminID = &idVal
+		if adminUser, err := u.service.FindByID(c.Request.Context(), idVal); err == nil {
+			adminEmail = adminUser.Email
+		}
+	}
+
+	u.auditService.LogAction(c.Request.Context(), audit.LogActionParams{
+		UserID:    adminID,
+		UserEmail: adminEmail,
+		Action:    enums.AuditActionUserDeleted,
+		Entity:    enums.AuditEntityUser,
+		EntityID:  &targetID,
+		Status:    enums.AuditStatusSuccess,
+		Method:    c.Request.Method,
+		Path:      c.Request.URL.Path,
+		Details:   fmt.Sprintf("Usuario eliminado por administrador (ID: %d)", targetID),
+		Payload:   fmt.Sprintf(`{"deleted_user_id": %d}`, targetID),
+		IP:        c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	})
 
 	u.sendSuccess(c, http.StatusOK, nil, "Usuario eliminado exitosamente")
 }

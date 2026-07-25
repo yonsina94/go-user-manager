@@ -38,9 +38,14 @@ Toda la aplicación frontend se compila y se embebe directamente en un **único 
 
 ### 👤 Gestión de Usuarios
 - **Perfil de Usuario**: Consulta y actualización de información personal (nombre, apellido, nombre de usuario y correo electrónico).
-- **Gestión de Avatares**: Subida, previsualización/recorte dinámico e integración con almacenamiento S3 (**MinIO / AWS S3**) con eliminación automática de avatares anteriores.
-- **Panel de Administración**: Gestión completa de usuarios (CRUD), asignación de roles (`Usuario` / `Administrador`) y activación/desactivación de estados de cuenta.
+- **Gestión de Avatares y Lightbox**: Subida, recortado interactivo en HD, almacenamiento S3 (**MinIO / AWS S3**) y previsualización extendida (*Lightbox*) con descarga al hacer clic en fotos de perfil.
+- **Panel de Administración**: Gestión completa de usuarios (CRUD), asignación de roles (`Usuario` / `Administrador`), activación/desactivación de cuentas y **Modal de Confirmación de Eliminación** estético.
 - **Búsqueda y Paginación**: Filtrado dinámico por parámetros de búsqueda y paginación en backend y frontend.
+
+### 📋 Módulo de Auditoría y Trazabilidad de Seguridad (Audit Logs)
+- **Registro Automático de Eventos**: Registro persistente en PostgreSQL de acciones críticas del sistema (`USER_LOGIN`, `USER_LOGIN_FAILED`, `USER_CREATED`, `USER_UPDATED`, `USER_DELETED`, `AVATAR_UPLOADED`, `PASSWORD_CHANGED`).
+- **Captura de Metadatos**: Captura IP de origen, User-Agent, método HTTP, ruta, estado, correo de usuario y **payload de la petición (JSON)**.
+- **Consola de Auditoría en Frontend (`AuditLogsPage`)**: Interfaz dedicada para administradores con filtrado por tipo de evento, búsqueda por IP/correo, paginación dinámica y **Modal de Inspección de Payloads (`AuditDetailModal`)**.
 
 ### ⚡ Modo Offline / UI Preview
 - Permite ejecutar el servidor sin requerir una conexión activa a la base de datos PostgreSQL (`SKIP_DB_CONNECT=true`), facilitando maquetación y pruebas rápidas de UI.
@@ -92,9 +97,14 @@ go-user-manager/
 │   └── user-manager-frontend/
 │       ├── public/              # Favicon e íconos estáticos SVG
 │       ├── src/
-│       │   ├── components/      # Componentes UI reutilizables (Modales, Avatares, Cropper)
+│       │   ├── components/      # Componentes UI reutilizables (AvatarPreviewModal, UserAvatar, Cropper, Pagination)
 │       │   ├── context/         # Contextos globales (ThemeContext - Auto Dark Mode, AuthContext)
-│       │   ├── features/        # Módulos por dominio (auth, profile, settings, users)
+│       │   ├── features/        # Módulos por dominio
+│       │   │   ├── audit/       # Módulo de Auditoría (AuditLogsPage, AuditDetailModal, tipos)
+│       │   │   ├── auth/        # Módulo de Autenticación (LoginPage, RecoverPasswordPage)
+│       │   │   ├── profile/     # Módulo de Perfil (ProfilePage)
+│       │   │   ├── settings/    # Módulo de Configuración (SettingsPage)
+│       │   │   └── users/       # Módulo de Usuarios (UsersPage, CreateUserModal, EditUserModal, DeleteUserModal)
 │       │   ├── layouts/         # Layout del Dashboard y navegación Workbench (Mobile Drawer + Sidebar)
 │       │   ├── routes/          # Rutas públicas y protegidas (ProtectedRoute)
 │       │   ├── services/        # Cliente API Axios y servicios
@@ -106,18 +116,19 @@ go-user-manager/
 │       ├── vite.config.ts
 │       └── .oxlintrc.json
 ├── internal/                    # Código privado de la aplicación Go
-│   ├── config/                  # Configuración con Viper y conexión a PostgreSQL
+│   ├── config/                  # Configuración con Viper y conexión a PostgreSQL (SKIP_DB_CONNECT)
 │   ├── logging/                 # Logging estructurado Slog, Tint handler y CKM Masking
-│   ├── middleware/              # Middlewares de Gin (Auth JWT, Roles, CORS, Logger)
-│   ├── modules/                 # Módulos de dominio (User, Enums, DTOs, Mappers, Services)
+│   ├── middleware/              # Middlewares de Gin (Auth JWT, Roles, CORS, Slog Logger)
+│   ├── modules/                 # Módulos de dominio de backend
+│   │   ├── audit/               # Módulo de Auditoría (AuditController, AuditService, AuditLog Entity)
 │   │   ├── commons/             # Interfaces comunes (Transformer/Mapper)
-│   │   ├── enums/               # Enumeraciones de roles (ADMIN, USER)
+│   │   ├── enums/               # Enumeraciones de roles (ADMIN, USER) y acciones de auditoría
 │   │   └── user/                # Controladores, servicios, DTOs y entidades de usuario
 │   └── templates/               # Plantillas Templ para correos (Password Reset HTML)
 ├── pkg/                         # Paquetes reutilizables/compartidos
 │   ├── dto/                     # Respuestas estandarizadas HTTP (Success / Error Response)
-│   ├── email/                   # Servicio de envío de correo SMTP
-│   ├── query/                   # Paginación y criterios de búsqueda GORM
+│   ├── email/                   # Servicio de envío de correo SMTP (Mailpit compatible)
+│   ├── query/                   # Paginación y criterios de búsqueda dinámica GORM (QueryFilter)
 │   └── storage/                 # Servicio de almacenamiento MinIO / AWS S3
 ├── web/                         # Frontend React compilado (generado por Vite para go:embed)
 ├── .air.toml                    # Configuración de live-reload con Air
@@ -135,6 +146,7 @@ El frontend ha sido auditado y modernizado mediante el estándar de diseño **Ha
 - **Género**: `modern-minimal` orientado a herramientas SaaS y plataformas de gestión.
 - **Form Actions y Concurrencia (React 19)**: Eliminación de manejadores manuales `onSubmit` / `FormEvent` en favor de `action={...}` nativo y `useTransition` para estados `isPending` no bloqueantes.
 - **Modo Oscuro Inteligente (ThemeContext)**: Soporte para **Automático (Hora del día 19:00 - 07:00)**, **Preferencia del Sistema OS**, **Claro** y **Oscuro** persistido en `localStorage`.
+- **Modales Estéticos y Lightbox**: Modal de confirmación para eliminación de cuentas (`DeleteUserModal`), inspección JSON de auditoría (`AuditDetailModal`) y previsualizador de fotos extendidas con descarga (`AvatarPreviewModal`).
 - **Experiencia Móvil Adaptativa**: Barra superior fija en smartphones con conmutador táctil de tema y menú sobrepuesto animado (*Drawer* con *backdrop blur*).
 - **Paleta OKLCH**: Variables centralizadas en `index.css` (`--color-paper`, `--color-ink`, `--color-accent`, `--color-rule`) con soporte para modo claro y oscuro.
 - **Iconografía Vectorial**: Cero uso de emojis del sistema operativo; sustitución por íconos SVG de **Lucide React**.

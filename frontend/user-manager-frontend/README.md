@@ -17,9 +17,10 @@ El frontend está estructurado siguiendo la arquitectura **Feature-First (orient
 src/
 ├── assets/                    # Archivos estáticos globales (imágenes, iconos)
 ├── components/                # Componentes UI agnósticos al dominio (Design System)
-│   └── ui/                    # UserAvatar, botones, inputs globales
+│   └── ui/                    # AvatarPreviewModal (Lightbox), UserAvatar, ImageCropperModal, Pagination
 ├── context/                   # Contextos globales (ThemeContext - Auto Dark Mode)
 ├── features/                  # 🚀 Módulos independientes de negocio
+│   ├── audit/                 # 📋 Módulo de Auditoría (AuditLogsPage, AuditDetailModal, tipos)
 │   ├── auth/                  # Módulo de Autenticación
 │   │   ├── context/           # AuthContext & AuthProvider
 │   │   ├── pages/             # LoginPage, RecoverPasswordPage (React 19 Form Actions)
@@ -27,7 +28,7 @@ src/
 │   ├── users/                 # Módulo de Gestión de Usuarios
 │   │   ├── components/        # UserForm
 │   │   ├── mappers/           # user.mapper.ts
-│   │   ├── modals/            # CreateUserModal, EditUserModal
+│   │   ├── modals/            # CreateUserModal, EditUserModal, DeleteUserModal
 │   │   ├── pages/             # UsersPage
 │   │   └── types/             # user.ts
 │   └── settings/              # Módulo de Configuración

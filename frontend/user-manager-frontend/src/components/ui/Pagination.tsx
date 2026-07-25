@@ -65,10 +65,10 @@ export const Pagination = ({
                     <select
                         value={pageSize}
                         onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                        className="px-2.5 py-1 text-xs font-semibold cursor-pointer"
                     >
                         {pageSizeOptions.map((option) => (
-                            <option key={option} value={option} className="dark:bg-gray-900 dark:text-white">
+                            <option key={option} value={option}>
                                 {option}
                             </option>
                         ))}

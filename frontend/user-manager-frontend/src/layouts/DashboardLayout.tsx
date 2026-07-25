@@ -6,7 +6,9 @@ import { SettingsPage } from "../features/settings/pages/SettingsPage";
 import { UsersPage } from "../features/users/pages/UsersPage";
 import { UserAvatar } from "../components/ui/UserAvatar";
 import { ProfilePage } from "../features/profile/pages/ProfilePage";
-import { Zap, User as UserIcon, Users, Settings, LogOut, Sun, Moon, Clock, Monitor, Menu, X } from "lucide-react";
+import { AuditLogsPage } from "../features/audit/pages/AuditLogsPage";
+import { UserRole } from "../features/users/types/user";
+import { Zap, User as UserIcon, Users, Settings, LogOut, Sun, Moon, Clock, Monitor, Menu, X, ShieldCheck } from "lucide-react";
 
 /* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 
@@ -46,6 +48,7 @@ export const DashboardLayout = () => {
     const navItems = [
         { path: "/profile", label: "Mi Perfil", icon: UserIcon },
         { path: "/users", label: "Usuarios", icon: Users },
+        ...(user?.role === UserRole.ADMIN ? [{ path: "/audit-logs", label: "Auditoría", icon: ShieldCheck }] : []),
         { path: "/settings", label: "Configuración", icon: Settings },
     ];
 
@@ -177,6 +180,7 @@ export const DashboardLayout = () => {
                 <Routes>
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/users" element={<UsersPage />} />
+                    <Route path="/audit-logs" element={<AuditLogsPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="*" element={<Navigate to="/users" replace />} />
                 </Routes>

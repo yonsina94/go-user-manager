@@ -3,6 +3,7 @@ import type { ApiResponse } from "../types/response";
 import type { User, UserDTO, UserRole } from "../features/users/types/user";
 import { mapUserDtoToUser, mapUserDtosToUsers } from "../features/users/mappers/user.mapper";
 import type { QueryFilter, SearchResponse } from "../types/query";
+import type { AuditLog } from "../features/audit/types/audit";
 
 const API_BASE_URL = "/api";
 
@@ -198,5 +199,12 @@ export const apiService = {
         }
 
         return response as unknown as ApiResponse<SearchResponse<User>>;
+    },
+
+    searchAuditLogs: async (filter: QueryFilter): Promise<ApiResponse<SearchResponse<AuditLog>>> => {
+        return request<SearchResponse<AuditLog>>("/audit-logs/search", {
+            method: "POST",
+            body: JSON.stringify(filter)
+        });
     }
 };
