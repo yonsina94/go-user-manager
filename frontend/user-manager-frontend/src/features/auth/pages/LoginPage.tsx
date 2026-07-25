@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../../../services/api.service";
@@ -10,7 +10,7 @@ export const LoginPage = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<Error | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     const { login, isAuthenticated } = useAuth();
     const navigate = useNavigate();
@@ -21,23 +21,20 @@ export const LoginPage = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const handleSubmit = () => {
         setError(null);
-        setLoading(true);
+        startTransition(async () => {
+            try {
+                const response = await apiService.login({ username, password });
 
-        try {
-            const response = await apiService.login({ username, password });
-
-            if (response.data) {
-                login(response.data.token, response.data.user);
-                navigate("/users");
+                if (response.data) {
+                    login(response.data.token, response.data.user);
+                    navigate("/users");
+                }
+            } catch (err: any) {
+                setError(err || new Error("Ocurrió un error al intentar iniciar sesión"));
             }
-        } catch (error: any) {
-            setError(error || new Error("Ocurrió un error al intentar iniciar sesión"));
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     return (
@@ -61,7 +58,7 @@ export const LoginPage = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form action={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                             Usuario
@@ -98,13 +95,14 @@ export const LoginPage = () => {
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={isPending}
                         className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 text-[var(--color-accent-ink)] font-semibold rounded-xl shadow-sm transition-colors duration-150 cursor-pointer flex items-center justify-center space-x-2"
                     >
                         <KeyRound className="w-4 h-4 stroke-[2]" />
-                        <span>{loading ? "Iniciando Sesión..." : "Iniciar Sesión"}</span>
+                        <span>{isPending ? "Iniciando Sesión..." : "Iniciar Sesión"}</span>
                     </button>
                 </form>
+
 
                 <div className="text-center pt-2 border-t border-[var(--color-rule)]">
                     <button

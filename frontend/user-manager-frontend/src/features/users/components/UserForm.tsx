@@ -75,13 +75,13 @@ export const UserForm = ({
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const handleSubmit = () => {
         onSubmit(formData);
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 text-left">
+        <form action={handleSubmit} className="space-y-4 text-left">
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <FormLabel>Nombre</FormLabel>

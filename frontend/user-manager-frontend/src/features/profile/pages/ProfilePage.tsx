@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useTransition } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../auth/context/AuthContext";
 import { apiService } from "../../../services/api.service";
@@ -34,35 +34,31 @@ export const ProfilePage = () => {
     const [name, setName] = useState(user?.name || "");
     const [lastname, setLastName] = useState(user?.lastname || "");
     const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [profileLoading, setProfileLoading] = useState(false);
+    const [isProfilePending, startProfileTransition] = useTransition();
 
     // Change password states
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordMessage, setPasswordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [isPasswordPending, startPasswordTransition] = useTransition();
 
     if (!user) return null;
 
-    const handleUpdateProfile = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleUpdateProfile = () => {
         setProfileMessage(null);
-
-        try {
-            setProfileLoading(true);
-            await apiService.updateProfile({ name, lastName: lastname });
-            await refreshUser();
-            setProfileMessage({ type: "success", text: "¡Perfil actualizado exitosamente!" });
-        } catch (error: any) {
-            setProfileMessage({ type: "error", text: error.message || "Error al actualizar el perfil" });
-        } finally {
-            setProfileLoading(false);
-        }
+        startProfileTransition(async () => {
+            try {
+                await apiService.updateProfile({ name, lastName: lastname });
+                await refreshUser();
+                setProfileMessage({ type: "success", text: "¡Perfil actualizado exitosamente!" });
+            } catch (error: any) {
+                setProfileMessage({ type: "error", text: error.message || "Error al actualizar el perfil" });
+            }
+        });
     };
 
-    const handleUpdatePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleUpdatePassword = () => {
         setPasswordMessage(null);
 
         if (newPassword !== confirmPassword) {
@@ -70,19 +66,19 @@ export const ProfilePage = () => {
             return;
         }
 
-        try {
-            setPasswordLoading(true);
-            await apiService.updatePassword({ currentPassword, newPassword });
-            setPasswordMessage({ type: "success", text: "¡Contraseña actualizada exitosamente!" });
-            setCurrentPassword("");
-            setNewPassword("");
-            setConfirmPassword("");
-        } catch (error: any) {
-            setPasswordMessage({ type: "error", text: error.message || "Error al actualizar la contraseña" });
-        } finally {
-            setPasswordLoading(false);
-        }
+        startPasswordTransition(async () => {
+            try {
+                await apiService.updatePassword({ currentPassword, newPassword });
+                setPasswordMessage({ type: "success", text: "¡Contraseña actualizada exitosamente!" });
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+            } catch (error: any) {
+                setPasswordMessage({ type: "error", text: error.message || "Error al actualizar la contraseña" });
+            }
+        });
     };
+
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 text-left">
@@ -133,7 +129,7 @@ export const ProfilePage = () => {
                 </AlertBox>
               )}
     
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <form action={handleUpdateProfile} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Nombre
@@ -170,9 +166,9 @@ export const ProfilePage = () => {
                   />
                 </div>
     
-                <Button type="submit" disabled={profileLoading}>
+                <Button type="submit" disabled={isProfilePending}>
                   <Save className="w-4 h-4 stroke-[2]" />
-                  <span>{profileLoading ? "Guardando..." : "Guardar Cambios"}</span>
+                  <span>{isProfilePending ? "Guardando..." : "Guardar Cambios"}</span>
                 </Button>
               </form>
             </Card>
@@ -195,7 +191,7 @@ export const ProfilePage = () => {
                 </AlertBox>
               )}
     
-              <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <form action={handleUpdatePassword} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Contraseña Actual
@@ -234,9 +230,9 @@ export const ProfilePage = () => {
                   />
                 </div>
     
-                <Button type="submit" disabled={passwordLoading}>
+                <Button type="submit" disabled={isPasswordPending}>
                   <KeyRound className="w-4 h-4 stroke-[2]" />
-                  <span>{passwordLoading ? "Actualizando..." : "Cambiar Contraseña"}</span>
+                  <span>{isPasswordPending ? "Actualizando..." : "Cambiar Contraseña"}</span>
                 </Button>
               </form>
             </Card>

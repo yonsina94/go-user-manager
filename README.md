@@ -59,10 +59,12 @@ Toda la aplicación frontend se compila y se embebe directamente en un **único 
 - **[Viper 1.21](https://github.com/spf13/viper)**: Gestión centralizada de configuración y variables de entorno.
 
 ### Frontend
-- **[React 19.2](https://react.dev/)**: Biblioteca UI moderna con soporte para React Compiler.
+- **[React 19.2](https://react.dev/)**: Biblioteca UI moderna con soporte para Form Actions nativos (`action={...}`), concurrencia (`useTransition`) y React Compiler.
 - **[TypeScript 6.0](https://www.typescriptlang.org/)**: Sistema de tipos estático estricto.
 - **[Vite 8.1](https://vitejs.dev/)**: Tooling frontend y dev-server ultra rápido con HMR.
-- **[Tailwind CSS 4.3](https://tailwindcss.com/) & [Styled Components 6.4]**: Estilizado utility-first combinado con componentes estilizados.
+- **[Tailwind CSS 4.3](https://tailwindcss.com/) & [Styled Components 6.4]**: Estilizado utility-first combinado con componentes estilizados y tokens OKLCH.
+- **[Lucide React 1.26](https://lucide.dev/)**: Iconografía vectorial stroke-consistent que sustituye emojis del sistema.
+- **[Google Fonts]**: Emparejamiento tipográfico moderno (*Space Grotesk* para encabezados, *Inter* para cuerpo, *JetBrains Mono* para código/roles).
 - **[React Router DOM v7](https://reactrouter.com/)**: Enrutamiento para SPA.
 - **[Oxlint 1.71](https://oxc.rs/)**: Linter ultra rápido en Rust para JS/TS.
 
@@ -85,13 +87,15 @@ go-user-manager/
 ├── .github/                     # Integraciones y configuraciones de GitHub (Dependabot)
 │   └── dependabot.yml
 ├── bin/                         # Binario compilado del servidor Go (bin/server)
+├── design.md                    # Especificación del Sistema de Diseño Hallmark (anti-AI-slop)
 ├── frontend/                    # Aplicación React (SPA Feature-First)
 │   └── user-manager-frontend/
 │       ├── public/              # Favicon e íconos estáticos SVG
 │       ├── src/
 │       │   ├── components/      # Componentes UI reutilizables (Modales, Avatares, Cropper)
+│       │   ├── context/         # Contextos globales (ThemeContext - Auto Dark Mode, AuthContext)
 │       │   ├── features/        # Módulos por dominio (auth, profile, settings, users)
-│       │   ├── layouts/         # Layout del Dashboard y navegación
+│       │   ├── layouts/         # Layout del Dashboard y navegación Workbench (Mobile Drawer + Sidebar)
 │       │   ├── routes/          # Rutas públicas y protegidas (ProtectedRoute)
 │       │   ├── services/        # Cliente API Axios y servicios
 │       │   ├── types/           # Definición de tipos TypeScript (DTOs, Queries)
@@ -119,8 +123,22 @@ go-user-manager/
 ├── .air.toml                    # Configuración de live-reload con Air
 ├── .env.example                 # Plantilla de variables de entorno
 ├── Makefile                     # Scripts de automatización de comandos
-└── main.go                      # Punto de entrada de la aplicación Go y servido estáctico SPA
+└── main.go                      # Punto de entrada de la aplicación Go y servido estático SPA
 ```
+
+---
+
+## 🎨 Sistema de Diseño y UI (Hallmark)
+
+El frontend ha sido auditado y modernizado mediante el estándar de diseño **Hallmark** ([design.md](file:///workspaces/go-user-manager/design.md)) bajo **React 19**:
+
+- **Género**: `modern-minimal` orientado a herramientas SaaS y plataformas de gestión.
+- **Form Actions y Concurrencia (React 19)**: Eliminación de manejadores manuales `onSubmit` / `FormEvent` en favor de `action={...}` nativo y `useTransition` para estados `isPending` no bloqueantes.
+- **Modo Oscuro Inteligente (ThemeContext)**: Soporte para **Automático (Hora del día 19:00 - 07:00)**, **Preferencia del Sistema OS**, **Claro** y **Oscuro** persistido en `localStorage`.
+- **Experiencia Móvil Adaptativa**: Barra superior fija en smartphones con conmutador táctil de tema y menú sobrepuesto animado (*Drawer* con *backdrop blur*).
+- **Paleta OKLCH**: Variables centralizadas en `index.css` (`--color-paper`, `--color-ink`, `--color-accent`, `--color-rule`) con soporte para modo claro y oscuro.
+- **Iconografía Vectorial**: Cero uso de emojis del sistema operativo; sustitución por íconos SVG de **Lucide React**.
+- **Tipografía Pura**: Sin títulos en cursiva (*No italic headers*), garantizando una jerarquía visual limpia.
 
 ---
 

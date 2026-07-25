@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useTransition } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiService } from "../../../services/api.service";
 import { ShieldCheck, Mail, Lock, ArrowLeft, Send } from "lucide-react";
@@ -19,33 +19,31 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const [loading, setLoading] = useState(false);
+    const [isPending, startTransition] = useTransition();
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<Error | null>(null);
 
-    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const handleSubmit = () => {
         setError(null);
         setMessage(null);
-        setLoading(true);
 
-        try {
-            if (activeToken) {
-                if (password !== confirmPassword)
-                    throw new Error("Las contraseñas no coinciden");
+        startTransition(async () => {
+            try {
+                if (activeToken) {
+                    if (password !== confirmPassword)
+                        throw new Error("Las contraseñas no coinciden");
 
-                await apiService.resetPassword({ token: activeToken, newPassword: password });
-                setMessage("¡Contraseña restablecida con éxito! Redirigiendo al inicio de sesión...");
-                setTimeout(() => navigate("/login"), 2500);
-            } else {
-                await apiService.forgotPassword({ email });
-                setMessage("Hemos enviado las instrucciones a tu correo electrónico.");
+                    await apiService.resetPassword({ token: activeToken, newPassword: password });
+                    setMessage("¡Contraseña restablecida con éxito! Redirigiendo al inicio de sesión...");
+                    setTimeout(() => navigate("/login"), 2500);
+                } else {
+                    await apiService.forgotPassword({ email });
+                    setMessage("Hemos enviado las instrucciones a tu correo electrónico.");
+                }
+            } catch (err: any) {
+                setError(err || new Error("Ocurrió un error al procesar la solicitud"));
             }
-        } catch (error: any) {
-            setError(error || new Error("Ocurrió un error al procesar la solicitud"));
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     return (
@@ -74,7 +72,7 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form action={handleSubmit} className="space-y-4">
                     {!activeToken ? (
                         <div>
                             <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
@@ -133,13 +131,14 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={isPending}
                         className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 text-[var(--color-accent-ink)] font-semibold rounded-xl shadow-sm transition-colors duration-150 cursor-pointer flex items-center justify-center space-x-2"
                     >
                         <Send className="w-4 h-4 stroke-[2]" />
-                        <span>{loading ? "Procesando..." : activeToken ? "Restablecer Contraseña" : "Enviar Correo"}</span>
+                        <span>{isPending ? "Procesando..." : activeToken ? "Restablecer Contraseña" : "Enviar Correo"}</span>
                     </button>
                 </form>
+
 
                 <div className="text-center pt-2 border-t border-[var(--color-rule)]">
                     <Link to="/login" className="inline-flex items-center space-x-2 text-sm font-medium text-[var(--color-accent)] hover:underline">

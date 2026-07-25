@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         [user, token, isLoading, login, logout, refreshUser]
     );
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return <AuthContext value={value}>{children}</AuthContext>;
 };
 
 // Hook personalizado para consumir el contexto de forma limpia

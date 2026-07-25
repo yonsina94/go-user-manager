@@ -18,10 +18,11 @@ src/
 ├── assets/                    # Archivos estáticos globales (imágenes, iconos)
 ├── components/                # Componentes UI agnósticos al dominio (Design System)
 │   └── ui/                    # UserAvatar, botones, inputs globales
+├── context/                   # Contextos globales (ThemeContext - Auto Dark Mode)
 ├── features/                  # 🚀 Módulos independientes de negocio
 │   ├── auth/                  # Módulo de Autenticación
 │   │   ├── context/           # AuthContext & AuthProvider
-│   │   ├── pages/             # LoginPage, RecoverPasswordPage
+│   │   ├── pages/             # LoginPage, RecoverPasswordPage (React 19 Form Actions)
 │   │   └── types/             # auth.types.ts
 │   ├── users/                 # Módulo de Gestión de Usuarios
 │   │   ├── components/        # UserForm
@@ -30,27 +31,31 @@ src/
 │   │   ├── pages/             # UsersPage
 │   │   └── types/             # user.ts
 │   └── settings/              # Módulo de Configuración
-│       └── pages/             # SettingsPage
-├── layouts/                   # Layouts principales de navegación (DashboardLayout)
+│       └── pages/             # SettingsPage (Selector de Tema)
+├── layouts/                   # Layouts principales de navegación (DashboardLayout - Mobile Drawer + Sidebar)
 ├── routes/                    # Configuración de enrutamiento y guardias (ProtectedRoute)
 ├── services/                  # Cliente API HTTP e interceptores (api.service.ts)
 ├── types/                     # Tipos globales de API (query.ts, response.ts)
 ├── utils/                     # Utilidades (gravatar.ts)
 ├── App.tsx                    # Enrutador principal de la aplicación
-├── main.tsx                   # Punto de entrada de React
-└── index.css                  # Estilos globales y Tailwind CSS v4
+├── main.tsx                   # Punto de entrada de React con ThemeProvider
+└── index.css                  # Estilos globales, tokens OKLCH y Tailwind CSS v4
 ```
 
 ---
 
 ## 🛠️ Tecnologías y Librerías
 
-- **React 19**: Biblioteca de interfaz de usuario de última generación.
+- **React 19**: Form Actions nativos (`action={...}`), concurrencia (`useTransition`) y compilador automático.
 - **TypeScript 6**: Tipado estático estricto para garantizar seguridad en tiempo de desarrollo.
 - **Vite 8**: Servidor de desarrollo con Hot Module Replacement (HMR) ultrarrápido y bundler de producción.
-- **Tailwind CSS v4 & Styled Components**: Estilizado dinámico, responsivo y modo oscuro.
+- **Tailwind CSS v4 & Styled Components**: Estilizado dinámico con tokens OKLCH y soporte para modo oscuro automático.
+- **Lucide React**: Iconografía vectorial para evitar emojis del sistema operativo.
+- **Google Fonts**: *Space Grotesk* (encabezados de exhibición), *Inter* (cuerpo de texto) y *JetBrains Mono* (código).
 - **React Router DOM v7**: Enrutamiento declarativo del lado del cliente.
 - **Oxlint**: Linter ultrarrápido configurado para React y TypeScript.
+
+
 
 ---
 
