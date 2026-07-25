@@ -88,7 +88,7 @@ export const ProfilePage = () => {
               avatarUrl={user.avatarUrl}
               email={user.email}
               name={user.name}
-              size={110}
+              size={140}
               editable={true}
               onAvatarUpload={async (file) => {
                 const res = await apiService.uploadUserAvatar(user.id, file);

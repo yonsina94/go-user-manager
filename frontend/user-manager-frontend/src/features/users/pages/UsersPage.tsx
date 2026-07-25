@@ -5,6 +5,7 @@ import { QueryOperator, type QueryFilter } from "../../../types/query";
 import { apiService } from "../../../services/api.service";
 import { CreateUserModal } from "../modals/CreateUserModal";
 import { EditUserModal } from "../modals/EditUserModal";
+import { DeleteUserModal } from "../modals/DeleteUserModal";
 import { UserAvatar } from "../../../components/ui/UserAvatar";
 import { useAuth } from "../../auth/context/AuthContext";
 import { Pagination } from "../../../components/ui/Pagination";
@@ -44,7 +45,10 @@ export const UsersPage = () => {
   // Modales
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
 
   // Función de búsqueda dinámica usando el QueryFilter pattern
   const executeFilter = useCallback(async () => {
@@ -105,15 +109,9 @@ export const UsersPage = () => {
     executeFilter();
   }, [executeFilter]);
 
-  const handleDeleteUser = async (user: User) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${user.name} ${user.lastname}"?`)) {
-      try {
-        await apiService.deleteUser(user.id);
-        executeFilter();
-      } catch (err: any) {
-        alert(err.message || "Error al eliminar el usuario");
-      }
-    }
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
   };
 
   const handleEditUser = (user: User) => {
@@ -212,7 +210,7 @@ export const UsersPage = () => {
                     avatarUrl={user.avatarUrl}
                     email={user.email}
                     name={user.name}
-                    size={48}
+                    size={68}
                     editable={true}
                     onAvatarUpload={async (file) => {
                       const res = await apiService.uploadUserAvatar(user.id, file);
@@ -294,6 +292,18 @@ export const UsersPage = () => {
         }}
         onSuccess={executeFilter}
       />
+
+      {/* Modal para Eliminar Usuario */}
+      <DeleteUserModal
+        user={userToDelete}
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setUserToDelete(null);
+        }}
+        onSuccess={executeFilter}
+      />
+
 
         <Pagination
       currentPage={page}

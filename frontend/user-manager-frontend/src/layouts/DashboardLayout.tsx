@@ -140,7 +140,8 @@ export const DashboardLayout = () => {
                                 avatarUrl={user?.avatarUrl}
                                 email={user?.email || ""}
                                 name={user?.name || "Usuario"}
-                                size={36}
+                                size={44}
+                                previewable={false}
                             />
                             <div className="text-left min-w-0 flex-1">
                                 <p className="text-sm font-medium text-[var(--color-ink)] truncate">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getGravatarUrl } from "../../utils/gravatar";
 import { ImageCropperModal } from "./ImageCropperModal";
+import { AvatarPreviewModal } from "./AvatarPreviewModal";
 import { Camera, Loader2 } from "lucide-react";
 import "./UserAvatar.css";
 
@@ -12,6 +13,7 @@ interface UserAvatarProps {
     name: string;
     size?: number;
     editable?: boolean;
+    previewable?: boolean;
     onAvatarUpload?: (file: File) => Promise<string | void>;
 }
 
@@ -21,13 +23,15 @@ export const UserAvatar = ({
     name,
     size = 96,
     editable = false,
+    previewable = true,
     onAvatarUpload,
 }: UserAvatarProps) => {
     const [imgSrc, setImgSrc] = useState("");
     const [isUploading, setIsUploading] = useState(false);
 
-    // Modal de Recorte
+    // Modales
     const [cropperOpen, setCropperOpen] = useState(false);
+    const [previewOpen, setPreviewOpen] = useState(false);
     const [tempImageSrc, setTempImageSrc] = useState("");
 
     useEffect(() => {
@@ -84,6 +88,12 @@ export const UserAvatar = ({
         }
     };
 
+    const handleImageClick = () => {
+        if (previewable && imgSrc) {
+            setPreviewOpen(true);
+        }
+    };
+
     const badgeSize = Math.max(26, Math.round(size * 0.3));
 
     return (
@@ -100,7 +110,9 @@ export const UserAvatar = ({
                 <img
                     src={imgSrc}
                     alt={`Avatar de ${name}`}
-                    className="avatar-image"
+                    className={`avatar-image ${previewable ? "cursor-pointer hover:brightness-95 transition-all" : ""}`}
+                    onClick={handleImageClick}
+                    title={previewable ? "Haz clic para ver la foto extendida" : `Avatar de ${name}`}
                     onError={handleError}
                 />
 
@@ -114,6 +126,7 @@ export const UserAvatar = ({
                     <label
                         className="avatar-upload-badge"
                         title="Cambiar foto de perfil"
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                             width: `${badgeSize}px`,
                             height: `${badgeSize}px`,
@@ -137,6 +150,15 @@ export const UserAvatar = ({
                 isOpen={cropperOpen}
                 onClose={() => setCropperOpen(false)}
                 onCropComplete={handleCropComplete}
+            />
+
+            {/* Modal de Previsualización Extendida */}
+            <AvatarPreviewModal
+                imageSrc={imgSrc}
+                name={name}
+                email={email}
+                isOpen={previewOpen}
+                onClose={() => setPreviewOpen(false)}
             />
         </>
     );
