@@ -1,8 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/go:2-1.26-trixie
 
-# Install additional OS packages
+# Install additional OS packages for CLI & clipboard support
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends xclip curl git
+    && apt-get -y install --no-install-recommends xclip xauth wl-clipboard x11-utils curl git
 
 # Install templ CLI
 RUN su vscode -c "go install github.com/a-h/templ/cmd/templ@latest" \

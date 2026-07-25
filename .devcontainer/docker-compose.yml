@@ -17,6 +17,7 @@ services:
     volumes:
       - ../..:/workspaces:cached
       - agy-data:/home/vscode/.gemini
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity

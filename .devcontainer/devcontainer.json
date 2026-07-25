@@ -22,8 +22,17 @@
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [5173, 8080, 5432, 8025, 1025, 9000, 9001],
 
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+    "source=${localEnv:HOME}/.Xauthority,target=/home/vscode/.Xauthority,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}",
+    "XAUTHORITY": "/home/vscode/.Xauthority"
+  },
+
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode && touch /home/vscode/.Xauthority",
   "customizations": {
     "vscode": {
       "extensions": [

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { apiService } from "../../../services/api.service";
 import { UserForm, type UserFormValues } from "../components/UserForm";
 import type { RegisterRequest } from "../../auth/types/auth.types";
-import { X, UserPlus } from "lucide-react";
+import { Modal } from "../../../components/ui/Modal";
+import { UserPlus } from "lucide-react";
 
-/* Hallmark · component: modal · genre: modern-minimal · design-system: design.md */
+/* Hallmark & vercel-composition-patterns · component: modal · genre: modern-minimal */
 
 interface CreateUserModalProps {
     isOpen: boolean;
@@ -15,8 +16,6 @@ interface CreateUserModalProps {
 export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-
-    if (!isOpen) return null;
 
     const handleSubmit = async (values: UserFormValues) => {
         setLoading(true);
@@ -43,32 +42,20 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-modal-backdrop">
-            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl w-full max-w-lg p-6 shadow-xl space-y-6 text-left animate-modal-card">
-                {/* Header */}
-                <div className="flex justify-between items-center border-b border-[var(--color-rule)] pb-4">
-                    <div className="flex items-center space-x-2.5">
-                        <UserPlus className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />
-                        <h2 className="font-display text-xl font-bold text-[var(--color-ink)] tracking-tight">
-                            Crear Nuevo Usuario
-                        </h2>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-1 rounded-lg text-[var(--color-ink-2)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-3)] transition-colors cursor-pointer"
-                    >
-                        <X className="w-5 h-5 stroke-[1.75]" />
-                    </button>
-                </div>
+        <Modal isOpen={isOpen} onClose={onClose} size="lg">
+            <Modal.Header
+                title="Crear Nuevo Usuario"
+                icon={<UserPlus className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />}
+                onClose={onClose}
+            />
 
-                {/* Error */}
+            <Modal.Body>
                 {error && (
                     <div className="p-3.5 bg-[var(--color-danger-bg)] border border-[var(--color-danger)]/30 text-[var(--color-danger)] text-sm rounded-xl font-medium">
                         {error.message}
                     </div>
                 )}
 
-                {/* Reusable Form */}
                 <UserForm
                     isEditMode={false}
                     onSubmit={handleSubmit}
@@ -76,8 +63,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
                     submitText="Crear Usuario"
                     loading={loading}
                 />
-            </div>
-        </div>
+            </Modal.Body>
+        </Modal>
     );
 };
-
