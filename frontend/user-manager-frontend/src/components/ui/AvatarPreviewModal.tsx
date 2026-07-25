@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Download, User as UserIcon } from "lucide-react";
+import { X, User as UserIcon } from "lucide-react";
 
 /* Hallmark · component: lightbox-modal · genre: modern-minimal · design-system: design.md */
 
@@ -31,15 +31,6 @@ export const AvatarPreviewModal = ({
 
     if (!isOpen) return null;
 
-    const handleDownload = () => {
-        const link = document.createElement("a");
-        link.href = imageSrc;
-        link.download = `avatar_${name.toLowerCase().replace(/\s+/g, "_")}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
     return createPortal(
         <div
             onClick={onClose}
@@ -68,13 +59,6 @@ export const AvatarPreviewModal = ({
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <button
-                            onClick={handleDownload}
-                            title="Descargar imagen"
-                            className="p-2 rounded-xl text-[var(--color-ink-2)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-3)] transition-colors cursor-pointer"
-                        >
-                            <Download className="w-4 h-4 stroke-[1.75]" />
-                        </button>
                         <button
                             onClick={onClose}
                             title="Cerrar (Esc)"
