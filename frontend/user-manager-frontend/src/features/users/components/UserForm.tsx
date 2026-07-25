@@ -21,25 +21,27 @@ interface UserFormProps {
     loading?: boolean;
 }
 
+/* Hallmark · component: form · genre: modern-minimal · design-system: design.md */
+
 export const FormLabel = styled.label.attrs({
-    className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left",
+    className: "block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5 text-left",
 })``;
 
 export const FormInput = styled.input.attrs({
     className:
-        "w-full px-3.5 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200",
+        "w-full px-3.5 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors",
 })``;
 
 export const FormSelect = styled.select.attrs({
     className:
-        "w-full px-3.5 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200",
+        "w-full px-3.5 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors cursor-pointer",
 })``;
 
 export const Button = styled.button.attrs<{ $variant?: "primary" | "secondary" }>((props) => ({
-    className: `px-4 py-2.5 rounded-lg font-medium shadow-xs transition-colors duration-200 cursor-pointer ${
+    className: `px-4 py-2.5 rounded-xl font-semibold text-sm shadow-xs transition-colors duration-150 cursor-pointer ${
         props.$variant === "secondary"
-            ? "border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-            : "bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
+            ? "border border-[var(--color-rule)] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-3)]"
+            : "bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-ink)] disabled:opacity-50"
     }`,
 }))``;
 

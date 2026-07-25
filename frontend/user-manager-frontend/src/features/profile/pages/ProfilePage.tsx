@@ -3,25 +3,28 @@ import styled from "styled-components";
 import { useAuth } from "../../auth/context/AuthContext";
 import { apiService } from "../../../services/api.service";
 import { UserAvatar } from "../../../components/ui/UserAvatar";
+import { UserCheck, ShieldCheck, Save, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
+
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 
 const Card = styled.div.attrs({
-  className: "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm",
+  className: "bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl p-6 shadow-sm",
 })``;
 
 const AlertBox = styled.div.attrs<{ $type: "success" | "error" }>((props) => ({
-  className: `p-3 rounded-lg text-sm mb-4 border transition-colors ${
+  className: `p-3.5 rounded-xl text-sm mb-4 border transition-colors flex items-center space-x-2 font-medium ${
     props.$type === "success"
-      ? "bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400"
-      : "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400"
+      ? "bg-[var(--color-success-bg)] border-[var(--color-success)]/30 text-[var(--color-success)]"
+      : "bg-[var(--color-danger-bg)] border-[var(--color-danger)]/30 text-[var(--color-danger)]"
   }`,
 }))``;
 
 const Button = styled.button.attrs({
-  className: "w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 cursor-pointer",
+  className: "w-full px-4 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 text-[var(--color-accent-ink)] font-semibold text-sm rounded-xl shadow-sm transition-colors duration-150 cursor-pointer flex items-center justify-center space-x-2",
 })``;
 
 const Input = styled.input.attrs({
-  className: "w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500",
+  className: "w-full px-3.5 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors",
 })``;
 
 export const ProfilePage = () => {
@@ -89,7 +92,7 @@ export const ProfilePage = () => {
               avatarUrl={user.avatarUrl}
               email={user.email}
               name={user.name}
-              size={120}
+              size={110}
               editable={true}
               onAvatarUpload={async (file) => {
                 const res = await apiService.uploadUserAvatar(user.id, file);
@@ -98,13 +101,13 @@ export const ProfilePage = () => {
               }}
             />
             <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] tracking-tight">
                 {user.name} {user.lastname}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              </h1>
+              <p className="text-sm text-[var(--color-ink-2)] mt-1 font-mono">
                 @{user.username} • {user.email}
               </p>
-              <span className="inline-block mt-2 px-3 py-1 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
+              <span className="inline-block mt-3 px-3 py-1 bg-[var(--color-paper-3)] text-[var(--color-ink)] rounded-full text-xs font-mono uppercase tracking-wider">
                 {user.role}
               </span>
             </div>
@@ -114,19 +117,25 @@ export const ProfilePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Formulario 1: Datos Personales */}
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                ✏️ Datos Personales
-              </h3>
+              <h2 className="font-display text-lg font-semibold text-[var(--color-ink)] mb-4 flex items-center space-x-2">
+                <UserCheck className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />
+                <span>Datos Personales</span>
+              </h2>
     
               {profileMessage && (
                 <AlertBox $type={profileMessage.type}>
-                  {profileMessage.text}
+                  {profileMessage.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 stroke-[2]" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 stroke-[2]" />
+                  )}
+                  <span>{profileMessage.text}</span>
                 </AlertBox>
               )}
     
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Nombre
                   </label>
                   <Input
@@ -138,7 +147,7 @@ export const ProfilePage = () => {
                 </div>
     
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Apellido
                   </label>
                   <Input
@@ -150,38 +159,45 @@ export const ProfilePage = () => {
                 </div>
     
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Correo Electrónico (Solo lectura)
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
+                    Correo Electrónico (Lectura)
                   </label>
                   <input
                     type="email"
                     value={user.email}
-                    className="w-full px-3.5 py-2 text-sm border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-800/50 text-gray-500 cursor-not-allowed"
+                    className="w-full px-3.5 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper-3)] text-[var(--color-ink-2)] cursor-not-allowed font-mono"
                     disabled
                   />
                 </div>
     
                 <Button type="submit" disabled={profileLoading}>
-                  {profileLoading ? "Guardando..." : "Guardar Cambios"}
+                  <Save className="w-4 h-4 stroke-[2]" />
+                  <span>{profileLoading ? "Guardando..." : "Guardar Cambios"}</span>
                 </Button>
               </form>
             </Card>
     
             {/* Formulario 2: Cambiar Contraseña */}
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                🔒 Seguridad y Contraseña
-              </h3>
+              <h2 className="font-display text-lg font-semibold text-[var(--color-ink)] mb-4 flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />
+                <span>Seguridad y Contraseña</span>
+              </h2>
     
               {passwordMessage && (
                 <AlertBox $type={passwordMessage.type}>
-                  {passwordMessage.text}
+                  {passwordMessage.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 stroke-[2]" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 stroke-[2]" />
+                  )}
+                  <span>{passwordMessage.text}</span>
                 </AlertBox>
               )}
     
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Contraseña Actual
                   </label>
                   <Input
@@ -193,7 +209,7 @@ export const ProfilePage = () => {
                 </div>
     
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Nueva Contraseña
                   </label>
                   <Input
@@ -206,7 +222,7 @@ export const ProfilePage = () => {
                 </div>
     
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                     Confirmar Nueva Contraseña
                   </label>
                   <Input
@@ -219,7 +235,8 @@ export const ProfilePage = () => {
                 </div>
     
                 <Button type="submit" disabled={passwordLoading}>
-                  {passwordLoading ? "Actualizando..." : "Cambiar Contraseña"}
+                  <KeyRound className="w-4 h-4 stroke-[2]" />
+                  <span>{passwordLoading ? "Actualizando..." : "Cambiar Contraseña"}</span>
                 </Button>
               </form>
             </Card>

@@ -7,28 +7,22 @@ import { CreateUserModal } from "../modals/CreateUserModal";
 import { EditUserModal } from "../modals/EditUserModal";
 import { UserAvatar } from "../../../components/ui/UserAvatar";
 import { useAuth } from "../../auth/context/AuthContext";
+import { Pagination } from "../../../components/ui/Pagination";
+import { Search, UserPlus, Edit3, Trash2, Shield, User as UserIcon, CheckCircle2, XCircle } from "lucide-react";
+
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 
 const StatusBadge = styled.span.attrs<{ $active: boolean }>((props) => ({
-  className: `inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+  className: `inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors ${
     props.$active
-      ? "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30"
-      : "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
+      ? "bg-[var(--color-success-bg)] text-[var(--color-success)] border-[var(--color-success)]/30"
+      : "bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]/30"
   }`,
 }))``;
 
 const Card = styled.div.attrs({
-  className: "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 transition-all duration-300",
-})<{ $isHoverable?: boolean }>`
-  ${(props) =>
-    props.$isHoverable &&
-    `
-    &:hover {
-      transform: translateY(-2px);
-      border-color: var(--accent, #a855f7);
-      box-shadow: 0 10px 20px -10px var(--accent-border, rgba(168, 85, 247, 0.3));
-    }
-  `}
-`;
+  className: "bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl p-5 transition-all duration-200 hover:border-[var(--color-accent)]/50",
+})``;
 
 export const UsersPage = () => {
   const { user: currentUser, refreshUser } = useAuth();
@@ -36,6 +30,10 @@ export const UsersPage = () => {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  // Estados de la paginacion
+   const [page, setPage] = useState<number>(1);
+   const [pageSize, setPageSize] = useState<number>(10);
 
   // Estados para filtros dinámicos
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,10 +52,14 @@ export const UsersPage = () => {
       setLoading(true);
       setError(null);
 
-      const filter: QueryFilter = {
-        filters: {},
-        orderBy: {},
-      };
+     const filter: QueryFilter = {
+      pagination: {
+        page: page,
+        length: pageSize,
+      },
+      filters: {},
+      orderBy: {},
+    };
 
       // Filtro exacto por Rol
       if (roleFilter !== "ALL") {
@@ -97,7 +99,7 @@ export const UsersPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, roleFilter, statusFilter, sortOrder]);
+  }, [searchQuery, roleFilter, statusFilter, sortOrder, page, pageSize]);
 
   useEffect(() => {
     executeFilter();
@@ -122,42 +124,44 @@ export const UsersPage = () => {
   return (
     <div className="space-y-6 text-left">
       {/* Header y Botón Nuevo Usuario */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-2">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] tracking-tight">
             Usuarios ({totalCount})
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Gestión y búsqueda dinámica de usuarios en el sistema.
+          </h1>
+          <p className="text-sm text-[var(--color-ink-2)] mt-0.5">
+            Gestión centralizada y búsqueda dinámica de cuentas de usuario.
           </p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 cursor-pointer self-start md:self-auto"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-ink)] font-semibold text-sm rounded-xl shadow-sm transition-colors duration-150 cursor-pointer self-start md:self-auto"
         >
-          Nuevo Usuario
+          <UserPlus className="w-4 h-4 stroke-[2]" />
+          <span>Nuevo Usuario</span>
         </button>
       </div>
 
       {/* Toolbar de Filtros Dinámicos */}
-      <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 space-y-3">
+      <div className="bg-[var(--color-paper-2)] p-4 rounded-2xl border border-[var(--color-rule)] space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Input de Búsqueda por Texto */}
           <div className="relative">
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-[var(--color-ink-2)] stroke-[1.75]" />
             <input
               type="text"
-              placeholder="🔍 Buscar por nombre, email..."
+              placeholder="Buscar por nombre, email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onChange={(e) => {setSearchQuery(e.target.value); setPage(1);}}
+              className="w-full pl-10 pr-3.5 py-2 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors"
             />
           </div>
 
           {/* Selector de Rol */}
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+            onChange={(e) => {setRoleFilter(e.target.value); setPage(1);}}
+            className="w-full px-3.5 py-2 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors cursor-pointer"
           >
             <option value="ALL">Todos los Roles</option>
             <option value={UserRole.USER}>Usuario</option>
@@ -167,8 +171,8 @@ export const UsersPage = () => {
           {/* Selector de Estado */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+            onChange={(e) => {setStatusFilter(e.target.value); setPage(1);}}
+            className="w-full px-3.5 py-2 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors cursor-pointer"
           >
             <option value="ALL">Todos los Estados</option>
             <option value="ACTIVE">Activo</option>
@@ -178,8 +182,8 @@ export const UsersPage = () => {
           {/* Selector de Ordenamiento */}
           <select
             value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+            onChange={(e) => {setSortOrder(e.target.value); setPage(1);}}
+            className="w-full px-3.5 py-2 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors cursor-pointer"
           >
             <option value="createdAt_DESC">Más recientes primero</option>
             <option value="createdAt_ASC">Más antiguos primero</option>
@@ -190,20 +194,20 @@ export const UsersPage = () => {
       </div>
 
       {/* Cargando o Error */}
-      {loading && <div className="text-left text-gray-500">Cargando usuarios...</div>}
-      {error && <div className="text-left text-red-500">{error.message}</div>}
+      {loading && <div className="text-left text-[var(--color-ink-2)] text-sm">Cargando usuarios...</div>}
+      {error && <div className="text-left text-[var(--color-danger)] text-sm">{error.message}</div>}
 
       {/* Grid de Tarjetas de Usuarios */}
       {!loading && !error && users.length === 0 ? (
-        <div className="text-center py-10 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-800 rounded-xl">
+        <div className="text-center py-12 text-[var(--color-ink-2)] border border-dashed border-[var(--color-rule)] rounded-2xl">
           No se encontraron usuarios con los filtros aplicados.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {users.map((user) => (
-            <Card key={user.id} $isHoverable>
+            <Card key={user.id}>
               <div className="flex justify-between items-start gap-3">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3.5 min-w-0">
                   <UserAvatar
                     avatarUrl={user.avatarUrl}
                     email={user.email}
@@ -219,38 +223,53 @@ export const UsersPage = () => {
                       return res.data?.avatarUrl;
                     }}
                   />
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-950 dark:text-gray-50">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display font-semibold text-base text-[var(--color-ink)] truncate">
                       {user.name} {user.lastname}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    <p className="text-xs text-[var(--color-ink-2)] truncate mb-1.5">
                       {user.email}
                     </p>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
-                      {user.role}
+                    <span className="inline-flex items-center space-x-1 text-xs font-mono font-medium bg-[var(--color-paper-3)] text-[var(--color-ink-2)] px-2 py-0.5 rounded-md uppercase tracking-wider">
+                      {user.role === UserRole.ADMIN ? (
+                        <Shield className="w-3 h-3 text-[var(--color-accent)] stroke-[2]" />
+                      ) : (
+                        <UserIcon className="w-3 h-3 stroke-[2]" />
+                      )}
+                      <span>{user.role}</span>
                     </span>
                   </div>
                 </div>
                 <StatusBadge $active={user.active}>
-                  {user.active ? "Activo" : "Inactivo"}
+                  {user.active ? (
+                    <>
+                      <CheckCircle2 className="w-3 h-3 stroke-[2.2]" />
+                      <span>Activo</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-3 h-3 stroke-[2.2]" />
+                      <span>Inactivo</span>
+                    </>
+                  )}
                 </StatusBadge>
               </div>
 
               {/* Acciones: Editar y Eliminar */}
-              <div className="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex justify-end space-x-1 mt-4 pt-3 border-t border-[var(--color-rule)]">
                 <button
                   onClick={() => handleEditUser(user)}
-                  className="p-1.5 text-gray-500 hover:text-purple-600 transition-colors cursor-pointer"
+                  className="p-2 text-[var(--color-ink-2)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-3)] rounded-lg transition-colors cursor-pointer"
                   title="Editar usuario"
                 >
-                  ✏️
+                  <Edit3 className="w-4 h-4 stroke-[1.75]" />
                 </button>
                 <button
                   onClick={() => handleDeleteUser(user)}
-                  className="p-1.5 text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                  className="p-2 text-[var(--color-ink-2)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-colors cursor-pointer"
                   title="Eliminar usuario"
                 >
-                  🗑️
+                  <Trash2 className="w-4 h-4 stroke-[1.75]" />
                 </button>
               </div>
             </Card>
@@ -275,6 +294,14 @@ export const UsersPage = () => {
         }}
         onSuccess={executeFilter}
       />
+
+        <Pagination
+      currentPage={page}
+      pageSize={pageSize}
+      totalItems={totalCount}
+      onPageChange={(newPage) => setPage(newPage)}
+      onPageSizeChange={(newSize) => { setPageSize(newSize); setPage(1); }}
+    />
     </div>
   );
 };

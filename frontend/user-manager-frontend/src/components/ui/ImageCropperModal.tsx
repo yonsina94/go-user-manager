@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Crop, X, ZoomIn } from "lucide-react";
+
+/* Hallmark · component: modal · genre: modern-minimal · design-system: design.md */
 
 interface ImageCropperModalProps {
     imageSrc: string;
@@ -137,17 +140,20 @@ export const ImageCropperModal = ({ imageSrc, isOpen, onClose, onCropComplete }:
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-2xl max-w-md w-full text-left space-y-5">
-                <div className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        ✂️ Ajustar Foto de Perfil
-                    </h3>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl p-6 shadow-xl max-w-md w-full text-left space-y-5">
+                <div className="flex justify-between items-center pb-3 border-b border-[var(--color-rule)]">
+                    <div className="flex items-center space-x-2.5">
+                        <Crop className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />
+                        <h2 className="font-display text-lg font-bold text-[var(--color-ink)] tracking-tight">
+                            Ajustar Foto de Perfil
+                        </h2>
+                    </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg cursor-pointer"
+                        className="p-1 rounded-lg text-[var(--color-ink-2)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-3)] transition-colors cursor-pointer"
                     >
-                        ✕
+                        <X className="w-5 h-5 stroke-[1.75]" />
                     </button>
                 </div>
 
@@ -163,15 +169,18 @@ export const ImageCropperModal = ({ imageSrc, isOpen, onClose, onCropComplete }:
                         ref={canvasRef}
                         width={300}
                         height={300}
-                        className="rounded-full border-4 border-purple-500/30 shadow-inner bg-gray-100 dark:bg-gray-800"
+                        className="rounded-full border-2 border-[var(--color-accent)] shadow-inner bg-[var(--color-paper-3)]"
                     />
                 </div>
 
                 {/* Controles de Zoom */}
                 <div className="space-y-2">
-                    <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <span>🔍 Zoom</span>
-                        <span>{Math.round(zoom * 100)}%</span>
+                    <div className="flex justify-between text-xs font-semibold text-[var(--color-ink-2)]">
+                        <span className="flex items-center space-x-1">
+                            <ZoomIn className="w-3.5 h-3.5 stroke-[1.75]" />
+                            <span>Zoom</span>
+                        </span>
+                        <span className="font-mono">{Math.round(zoom * 100)}%</span>
                     </div>
                     <input
                         type="range"
@@ -180,21 +189,21 @@ export const ImageCropperModal = ({ imageSrc, isOpen, onClose, onCropComplete }:
                         step="0.05"
                         value={zoom}
                         onChange={(e) => setZoom(parseFloat(e.target.value))}
-                        className="w-full accent-purple-600 cursor-pointer"
+                        className="w-full accent-[var(--color-accent)] cursor-pointer"
                     />
                 </div>
 
                 {/* Botones de Acción */}
-                <div className="flex justify-end space-x-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex justify-end space-x-3 pt-3 border-t border-[var(--color-rule)]">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors cursor-pointer text-sm"
+                        className="px-4 py-2.5 bg-[var(--color-paper-3)] hover:bg-[var(--color-paper)] text-[var(--color-ink)] font-semibold rounded-xl transition-colors cursor-pointer text-sm"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleCropSave}
-                        className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-sm transition-colors cursor-pointer text-sm"
+                        className="px-4 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-ink)] font-semibold rounded-xl shadow-xs transition-colors cursor-pointer text-sm"
                     >
                         Guardar Foto
                     </button>

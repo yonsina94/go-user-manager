@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiService } from "../../../services/api.service";
+import { ShieldCheck, Mail, Lock, ArrowLeft, Send } from "lucide-react";
+
+/* Hallmark · genre: modern-minimal · macrostructure: Centered Panel Card · design-system: design.md · designed-as-app */
 
 interface RecoverPasswordProps {
     recoveryToken?: string;
@@ -32,11 +35,11 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
                     throw new Error("Las contraseñas no coinciden");
 
                 await apiService.resetPassword({ token: activeToken, newPassword: password });
-                setMessage("¡Contraseña restablecida con éxito! Redirigiendo al login...");
-                setTimeout(() => navigate("/login"), 3000);
+                setMessage("¡Contraseña restablecida con éxito! Redirigiendo al inicio de sesión...");
+                setTimeout(() => navigate("/login"), 2500);
             } else {
                 await apiService.forgotPassword({ email });
-                setMessage("Te hemos enviado las instrucciones a tu correo electrónico.");
+                setMessage("Hemos enviado las instrucciones a tu correo electrónico.");
             }
         } catch (error: any) {
             setError(error || new Error("Ocurrió un error al procesar la solicitud"));
@@ -46,25 +49,27 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4 text-left">
-            <div className="w-full max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl p-8 space-y-6">
-                <div className="text-center">
-                    <span className="text-4xl">🔐</span>
-                    <h2 className="text-2xl font-bold text-gray-950 dark:text-gray-50 mt-2">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--color-paper)] p-4 text-left">
+            <div className="w-full max-w-md bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl shadow-sm p-8 space-y-6">
+                <div className="text-center space-y-2">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--color-accent)] mx-auto flex items-center justify-center text-[var(--color-accent-ink)] shadow-sm">
+                        <ShieldCheck className="w-6 h-6 stroke-[2]" />
+                    </div>
+                    <h2 className="font-display text-2xl font-bold text-[var(--color-ink)] tracking-tight">
                         {activeToken ? "Restablecer Contraseña" : "Recuperar Contraseña"}
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {activeToken ? "Ingresa tu nueva contraseña a continuación" : "Ingresa tu correo para recibir las instrucciones"}
+                    <p className="text-sm text-[var(--color-ink-2)]">
+                        {activeToken ? "Ingresa tu nueva contraseña a continuación" : "Ingresa tu correo para recibir instrucciones de acceso"}
                     </p>
                 </div>
 
                 {message && (
-                    <div className="p-3 bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400 text-sm rounded-lg">
+                    <div className="p-3.5 bg-[var(--color-success-bg)] border border-[var(--color-success)]/30 text-[var(--color-success)] text-sm rounded-xl font-medium">
                         {message}
                     </div>
                 )}
                 {error && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-sm rounded-lg">
+                    <div className="p-3.5 bg-[var(--color-danger-bg)] border border-[var(--color-danger)]/30 text-[var(--color-danger)] text-sm rounded-xl font-medium">
                         {error.message}
                     </div>
                 )}
@@ -72,47 +77,56 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {!activeToken ? (
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                                 Correo Electrónico
                             </label>
-                            <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="tu@email.com"
-                                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
+                            <div className="relative">
+                                <Mail className="w-4 h-4 absolute left-3.5 top-3 text-[var(--color-ink-2)] stroke-[1.75]" />
+                                <input
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="tu@email.com"
+                                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors"
+                                />
+                            </div>
                         </div>
                     ) : (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                                     Nueva Contraseña
                                 </label>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={6}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Mínimo 6 caracteres"
-                                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                />
+                                <div className="relative">
+                                    <Lock className="w-4 h-4 absolute left-3.5 top-3 text-[var(--color-ink-2)] stroke-[1.75]" />
+                                    <input
+                                        type="password"
+                                        required
+                                        minLength={6}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Mínimo 6 caracteres"
+                                        className="w-full pl-10 pr-4 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors"
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-2)] mb-1.5">
                                     Confirmar Contraseña
                                 </label>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={6}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Repite tu nueva contraseña"
-                                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent text-gray-950 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                />
+                                <div className="relative">
+                                    <Lock className="w-4 h-4 absolute left-3.5 top-3 text-[var(--color-ink-2)] stroke-[1.75]" />
+                                    <input
+                                        type="password"
+                                        required
+                                        minLength={6}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="Repite tu nueva contraseña"
+                                        className="w-full pl-10 pr-4 py-2.5 text-sm border border-[var(--color-rule)] rounded-xl bg-[var(--color-paper)] text-[var(--color-ink)] focus:outline-none transition-colors"
+                                    />
+                                </div>
                             </div>
                         </>
                     )}
@@ -120,18 +134,21 @@ export const RecoverPasswordPage = ({ recoveryToken }: RecoverPasswordProps) => 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold rounded-lg shadow-md transition-colors cursor-pointer"
+                        className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 text-[var(--color-accent-ink)] font-semibold rounded-xl shadow-sm transition-colors duration-150 cursor-pointer flex items-center justify-center space-x-2"
                     >
-                        {loading ? "Procesando..." : activeToken ? "Restablecer Contraseña" : "Enviar Correo"}
+                        <Send className="w-4 h-4 stroke-[2]" />
+                        <span>{loading ? "Procesando..." : activeToken ? "Restablecer Contraseña" : "Enviar Correo"}</span>
                     </button>
                 </form>
 
-                <div className="text-center pt-2">
-                    <Link to="/login" className="text-sm text-purple-600 hover:underline">
-                        ← Volver al Inicio de Sesión
+                <div className="text-center pt-2 border-t border-[var(--color-rule)]">
+                    <Link to="/login" className="inline-flex items-center space-x-2 text-sm font-medium text-[var(--color-accent)] hover:underline">
+                        <ArrowLeft className="w-3.5 h-3.5 stroke-[2]" />
+                        <span>Volver al Inicio de Sesión</span>
                     </Link>
                 </div>
             </div>
         </div>
     );
 };
+

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { apiService } from "../../../services/api.service";
 import { UserForm, type UserFormValues } from "../components/UserForm";
 import type { RegisterRequest } from "../../auth/types/auth.types";
+import { X, UserPlus } from "lucide-react";
+
+/* Hallmark · component: modal · genre: modern-minimal · design-system: design.md */
 
 interface CreateUserModalProps {
     isOpen: boolean;
@@ -40,22 +43,27 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-6 text-left animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div className="bg-[var(--color-paper-2)] border border-[var(--color-rule)] rounded-2xl w-full max-w-lg p-6 shadow-xl space-y-6 text-left">
                 {/* Header */}
-                <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-4">
-                    <h3 className="text-xl font-bold text-gray-950 dark:text-gray-50">Crear Nuevo Usuario</h3>
+                <div className="flex justify-between items-center border-b border-[var(--color-rule)] pb-4">
+                    <div className="flex items-center space-x-2.5">
+                        <UserPlus className="w-5 h-5 text-[var(--color-accent)] stroke-[2]" />
+                        <h2 className="font-display text-xl font-bold text-[var(--color-ink)] tracking-tight">
+                            Crear Nuevo Usuario
+                        </h2>
+                    </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-semibold cursor-pointer"
+                        className="p-1 rounded-lg text-[var(--color-ink-2)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-3)] transition-colors cursor-pointer"
                     >
-                        ✕
+                        <X className="w-5 h-5 stroke-[1.75]" />
                     </button>
                 </div>
 
                 {/* Error */}
                 {error && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-sm rounded-lg">
+                    <div className="p-3.5 bg-[var(--color-danger-bg)] border border-[var(--color-danger)]/30 text-[var(--color-danger)] text-sm rounded-xl font-medium">
                         {error.message}
                     </div>
                 )}
@@ -72,3 +80,4 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
         </div>
     );
 };
+
