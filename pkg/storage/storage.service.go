@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -48,9 +49,20 @@ func NewStorageService(lf *logging.LoggerFactory) (*StorageService, error) {
 
 	logger.Info("Connection to S3 opened")
 
+	ctx := context.Background()
+	bucketName := config.AppConfig.S3Bucket
+	exists, err := client.BucketExists(ctx, bucketName)
+	if err == nil {
+		if !exists {
+			_ = client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
+		}
+		policy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::%s/*"]}]}`, bucketName)
+		_ = client.SetBucketPolicy(ctx, bucketName, policy)
+	}
+
 	return &StorageService{
 		client: client,
-		bucket: config.AppConfig.S3Bucket,
+		bucket: bucketName,
 		logger: logger,
 	}, nil
 }
@@ -84,4 +96,27 @@ func (s *StorageService) UploadAvatar(ctx context.Context, userID uint, fileName
 	avatarUrl = fmt.Sprintf("%s/%s/%s", config.AppConfig.S3PublicURL, s.bucket, objectName)
 
 	return
+}
+
+// DeleteAvatarByUrl extrae la clave del objeto desde la URL del avatar y borra el archivo anterior de MinIO S3
+func (s *StorageService) DeleteAvatarByUrl(ctx context.Context, avatarUrl string) error {
+	if avatarUrl == "" {
+		return nil
+	}
+
+	prefix := fmt.Sprintf("%s/%s/", config.AppConfig.S3PublicURL, s.bucket)
+	if !strings.HasPrefix(avatarUrl, prefix) {
+		s.logger.WarnContext(ctx, "La URL del avatar no coincide con la ruta esperada de S3", slog.String("url", avatarUrl))
+		return nil
+	}
+
+	objectName := strings.TrimPrefix(avatarUrl, prefix)
+	err := s.client.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		s.logger.ErrorContext(ctx, "Error eliminando objeto antiguo de MinIO S3", slog.String("object", objectName), slog.Any("error", err))
+		return err
+	}
+
+	s.logger.InfoContext(ctx, "Avatar anterior eliminado exitosamente de MinIO S3", slog.String("object", objectName))
+	return nil
 }

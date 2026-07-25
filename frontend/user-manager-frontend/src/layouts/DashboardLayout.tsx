@@ -3,6 +3,7 @@ import { useAuth } from "../features/auth/context/AuthContext";
 import { SettingsPage } from "../features/settings/pages/SettingsPage";
 import { UsersPage } from "../features/users/pages/UsersPage";
 import { UserAvatar } from "../components/ui/UserAvatar";
+import { ProfilePage } from "../features/profile/pages/ProfilePage";
 
 export const DashboardLayout = () => {
     const { user, logout } = useAuth();
@@ -25,6 +26,13 @@ export const DashboardLayout = () => {
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1">
+                     <Link 
+                     to="/profile" 
+                     className="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" 
+                     >
+                        <span>👤</span>
+                        <span>Mi Perfil</span>
+                    </Link>
                     <Link
                         to="/users"
                         className="flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -71,6 +79,7 @@ export const DashboardLayout = () => {
             {/* Área Principal */}
             <main className="flex-1 p-8">
                 <Routes>
+                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/users" element={<UsersPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="*" element={<Navigate to="/users" replace />} />

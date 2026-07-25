@@ -34,6 +34,9 @@ go.work.sum
 # Frontend build output embedded in Go
 web/
 
+# Binaries directory
+bin/
+
 # Temporary and log directories
 tmp/
 logs/

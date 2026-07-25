@@ -205,6 +205,13 @@ func (u *UserController) uploadAvatar(c *gin.Context) {
 	}
 	defer file.Close()
 
+	// Obtener el usuario actual para verificar si ya tiene un avatar guardado en MinIO
+	currentUser, err := u.service.FindByID(c.Request.Context(), uint(userID))
+	var oldAvatarUrl string
+	if err == nil && currentUser.AvatarUrl.Valid {
+		oldAvatarUrl = currentUser.AvatarUrl.String
+	}
+
 	avatarUrl, err := u.storageService.UploadAvatar(c.Request.Context(), uint(userID), fileHeader.Filename, file, fileHeader.Size, fileHeader.Header.Get("Content-Type"))
 	if err != nil {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al subir avatar a almacenamiento S3")
@@ -215,6 +222,11 @@ func (u *UserController) uploadAvatar(c *gin.Context) {
 	if err != nil {
 		u.sendError(c, http.StatusInternalServerError, err, "Error al actualizar avatar en la base de datos")
 		return
+	}
+
+	// Borrar de MinIO el avatar viejo para mantener el bucket limpio
+	if oldAvatarUrl != "" {
+		_ = u.storageService.DeleteAvatarByUrl(c.Request.Context(), oldAvatarUrl)
 	}
 
 	u.sendSuccess(c, http.StatusOK, gin.H{"avatarUrl": avatarUrl}, "Foto de perfil actualizada exitosamente")
